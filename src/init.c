@@ -22,7 +22,7 @@
 // Initialise the editor
 void init_editor (void)
 {
-  // Set the initial cursor position
+  // Set a bunch of initial values for the editor variables
   editor.cx = 0;
   editor.cy = 0;
   editor.rx = 0;
@@ -31,10 +31,13 @@ void init_editor (void)
   editor.n_lines = 0;
   editor.lines = NULL;
   editor.filename = NULL;
+  editor.status_msg[0] = '\0';
+  editor.status_msg_time = 0;
 
   // Get the size of the terminal window
   if (get_terminal_size (&editor.n_screen_cols, &editor.n_screen_rows) == -1)
     error ("Couldn't determine the size of the terminal window");
-  // Remove a single row as we will draw a status bar on the bottom row
-  editor.n_screen_rows -= 1;
+
+  // Remove a two rows as we will draw a status bar and message on these rows
+  editor.n_screen_rows -= 2;
 }

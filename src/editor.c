@@ -13,8 +13,9 @@
  * ************************************************************************** */
 
 
-
+#include <time.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -77,6 +78,33 @@ void write_editor_rows (SCREEN_BUF *sb)
   }
 }
 
+// Create the standard status message
+void set_status_message (char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  vsnprintf (editor.status_msg, sizeof (editor.status_msg), fmt, ap);
+  va_end (ap);
+  editor.status_msg_time = time (NULL);
+}
+
+void write_message_bar (SCREEN_BUF *sb)
+{
+  size_t msg_len;
+
+  // Clear the message bar with \x1b[K
+  append_to_screen_buf (sb, "\x1b[K", 3);
+
+  // Add the status message to the screen buffer, but only draw this if it has
+  // been on screen for less than 5 seconds
+  msg_len = strlen (editor.status_msg);
+  if (msg_len > editor.n_screen_cols)
+    msg_len = (size_t) editor.n_screen_cols;
+  if (msg_len && time (NULL) - editor.status_msg_time < 5)
+    append_to_screen_buf (sb, editor.status_msg, msg_len);
+}
+
+// Write the status bar for filename and line number to the screen buffer
 void write_status_bar (SCREEN_BUF *sb)
 {
   int status_len, r_len;
@@ -115,6 +143,7 @@ void write_status_bar (SCREEN_BUF *sb)
 
   // \x1b[m will revert back to normal formatting
   append_to_screen_buf (sb, "\x1b[m", 3);
+  append_to_screen_buf (sb, "\r\n", 2);
 }
 
 
@@ -172,6 +201,7 @@ void draw_editor_screen (void)
   append_to_screen_buf (&sb, "\x1b[H", 3);
   write_editor_rows (&sb);
   write_status_bar (&sb);
+  write_message_bar (&sb);
 
   // Reposition the cursor in the terminal window
   snprintf (buf, sizeof (buf), "\x1b[%d;%dH",

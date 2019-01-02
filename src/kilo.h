@@ -21,6 +21,7 @@
  * Some includes
  */
 
+#include <time.h>
 #include <stddef.h>
 #include <termios.h>
 
@@ -58,6 +59,8 @@ typedef struct
 {
   eline *lines;
   char *filename;
+  char status_msg[80];
+  time_t status_msg_time;
   int cx, cy;
   int rx;
   int n_lines;

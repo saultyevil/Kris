@@ -41,5 +41,7 @@ void process_keypress (void);
 // R
 int read_keypress (void);
 void reset_display (void);
+// S
+void set_status_message (char *fmt, ...);
 
 #endif //KILO_FUNCTIONS_H
