@@ -13,6 +13,7 @@
  * ************************************************************************** */
 
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -23,6 +24,64 @@
 #include "kilo.h"
 
 
+// Display a prompt in the status bar, and let the user input a line of text
+char *status_bar_prompt (char *prompt_msg)
+{
+  int c;
+  size_t buf_len, buf_size;
+  char *buf;
+
+  buf_len = 0;
+  buf_size = 128;
+  buf = malloc (buf_size);
+  buf[0] = '\0';
+
+  // Keep looping until buf can be returned
+  while (TRUE)
+  {
+    set_status_message (prompt_msg, buf);
+    draw_editor_screen ();
+
+    c = read_keypress ();
+
+    // Allow a user to delete something in the status prompt
+    if (c == DEL_KEY || c == CTRL_KEY ('h') || c == BACK_SPACE)
+    {
+      if (buf_len != 0)
+        buf[--buf_len] = '\0';
+    }
+    // Cancel and return NULL if escape is pressed
+    else if (c == '\x1b')
+    {
+      set_status_message ("");
+      free (buf);
+      return NULL;
+    }
+    // If enter is pressed
+    else if (c == '\r')
+    {
+      if (buf_len != 0)
+      {
+        set_status_message ("");
+        return buf;
+      }
+    }
+    // Else if not a control sequence keep adding chars to buf
+    else if (!iscntrl (c) && c < 128)
+    {
+      if (buf_len == buf_size - 1)
+      {
+        buf_size *= 2;
+        buf = realloc (buf, buf_size);
+      }
+
+      buf[buf_len++] = (char) c;
+      buf[buf_len] = '\0';
+    }
+  }
+}
+
+// Open a file and red into the text buffer
 void open_file (char *filename)
 {
   char *line;
@@ -90,8 +149,16 @@ void save_file (void)
   char *buf;
   int file_desc;
 
-  if (editor.filename == NULL)  // TODO: prompt user for file name
-    return;
+  // Prompt the user for a filename
+  if (editor.filename == NULL)
+  {
+    editor.filename = status_bar_prompt ("Save as: %s");
+    if (editor.filename == NULL)
+    {
+      set_status_message ("Save aborted");
+      return;
+    }
+  }
 
   // Retrieve the text buffer in the form of strings, create the file in 0644
   // mode and then write to file
@@ -109,6 +176,7 @@ void save_file (void)
         return;
       }
     }
+
     close (file_desc);
   }
 

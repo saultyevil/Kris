@@ -51,6 +51,7 @@ void reset_display (void);
 // S
 void save_file (void);
 void set_status_message (char *fmt, ...);
+char *status_bar_prompt (char *prompt_msg);
 // U
 void update_to_render_buffer (eline *line);
 
