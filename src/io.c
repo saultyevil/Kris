@@ -13,9 +13,12 @@
  * ************************************************************************** */
 
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "kilo.h"
 
@@ -51,6 +54,66 @@ void open_file (char *filename)
   free (line);
   if (fclose (input_file))
     error ("Couldn't close input file");
+  editor.modified = FALSE;
+}
+
+// Convert array of eline data types into a single string
+char *rows_to_strings (size_t *buf_len)
+{
+  char *buf, *p;
+  size_t i, tot_len;
+
+  // Figure out the total number of chars in the text buffer
+  tot_len = 0;
+  for (i = 0; i < editor.n_lines; i++)
+    tot_len += editor.lines[i].len + 1;
+  *buf_len = tot_len;
+
+  // Copy the contents of each row to the end of the buffer and append a new
+  // line character at the end of each row
+  p = buf = malloc (tot_len);
+  for (i = 0; i < editor.n_lines; i++)
+  {
+    memcpy (p, editor.lines[i].chars, editor.lines[i].len);
+    p += editor.lines[i].len;
+    *p = '\n';
+    p++;
+  }
+
+  return buf;
+}
+
+// Save the text buffer to file
+void save_file (void)
+{
+  size_t buf_len;
+  char *buf;
+  int file_desc;
+
+  if (editor.filename == NULL)  // TODO: prompt user for file name
+    return;
+
+  // Retrieve the text buffer in the form of strings, create the file in 0644
+  // mode and then write to file
+  buf = rows_to_strings (&buf_len);
+  if (((file_desc = open (editor.filename, O_RDWR | O_CREAT, 0644)) != -1))
+  {
+    if (ftruncate (file_desc, buf_len) != -1)
+    {
+      if (write (file_desc, buf, buf_len) == buf_len)
+      {
+        close (file_desc);
+        free (buf);
+        editor.modified = FALSE;
+        set_status_message ("%d bytes written to disk", buf_len);
+        return;
+      }
+    }
+    close (file_desc);
+  }
+
+  free (buf);
+  set_status_message ("Can't save file! I/O error: %s", strerror (errno));
 }
 
 // Append a string to the screen buffer

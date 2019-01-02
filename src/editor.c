@@ -115,8 +115,9 @@ void write_status_bar (SCREEN_BUF *sb)
   append_to_screen_buf (sb, "\x1b[7m", 4);
 
   // Add the filename and number of lines to the status bar
-  status_len = snprintf (status, sizeof (status), "%.20s - %d lines",
-         editor.filename ? editor.filename : "[No File]", editor.n_screen_rows);
+  status_len = snprintf (status, sizeof (status), "%.20s - %d lines %s",
+         editor.filename ? editor.filename : "[No File]", editor.n_screen_rows,
+         editor.modified ? "(modified)" : "");
   if (status_len > editor.n_screen_cols)
     status_len = editor.n_screen_cols;
   append_to_screen_buf (sb, status, (size_t) status_len);
@@ -145,7 +146,6 @@ void write_status_bar (SCREEN_BUF *sb)
   append_to_screen_buf (sb, "\x1b[m", 3);
   append_to_screen_buf (sb, "\r\n", 2);
 }
-
 
 // Convert the cursor position in the chars array to a position in the render
 // array
@@ -216,7 +216,7 @@ void draw_editor_screen (void)
 }
 
 // Update a row to replace special characters, i.e. turn \t into spaces
-void update_render_row (eline *line)
+void update_to_render_buffer (eline *line)
 {
   int ntabs;
   size_t i, ii;
@@ -272,7 +272,71 @@ void append_to_text_buffer (char *s, size_t linelen)
   // Update the rendering buffer for special characters
   editor.lines[line_index].r_len = 0;
   editor.lines[line_index].render = NULL;
-  update_render_row (&editor.lines[line_index]);
+  update_to_render_buffer (&editor.lines[line_index]);
 
+  // Update total number of lines and number of modified lines
   editor.n_lines++;
+  editor.modified++;
+}
+
+// Insert a char into the text buffer arrays
+void insert_char_to_row (eline *line, int insert_idx, int c)
+{
+  // Bounds check for insertion index
+  if (insert_idx < 0 || insert_idx > line->len)
+    insert_idx = (int) line->len;
+
+  // Insert the new char into chars array
+  // Use memmove as this is safer for memory overlap issues where we would lose
+  // the correct data to copy and update the render buffer
+  line->chars = realloc (line->chars, line->len + 2);
+  memmove (&line->chars[insert_idx + 1], &line->chars[insert_idx],
+           line->len - insert_idx + 1);
+  line->len++;
+  line->chars[insert_idx] = (char) c;
+  update_to_render_buffer (line);
+  editor.modified++;
+}
+
+// Delete a char in a text buffer array
+void delete_char_in_row (eline *line, int insert_idx)
+{
+  // Bounds check for insertion index
+  if (insert_idx < 0 || insert_idx > line->len)
+    return;
+
+  // We are essentially just moving everything to the left
+  memmove (&line->chars[insert_idx], &line->chars[insert_idx + 1],
+           line->len - insert_idx);
+  line->len--;
+  update_to_render_buffer (line);
+  editor.modified++;
+}
+
+// Insert a char control function
+void insert_char (int c)
+{
+  // If the cursor is on the bottom line, append a new line
+  if (editor.cy == editor.n_lines)
+    append_to_text_buffer ("", 0);
+
+  insert_char_to_row (&editor.lines[editor.cy], editor.cx, c);
+  editor.cx++;
+}
+
+// Delete a char control function
+void delete_char (void)
+{
+  eline *line;
+
+  // Nothing to delete if we are past the last line in the file
+  if (editor.cy == editor.n_lines)
+    return;
+
+  line = &editor.lines[editor.cy];
+  if (editor.cx > 0)
+  {
+    delete_char_in_row (line, editor.cx - 1);
+    editor.cx--;
+  }
 }

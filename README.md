@@ -1,4 +1,4 @@
-# Kilo Text Editor
+# Kris Text Editor
 
 **WIP: currently only works as a text viewer!**
 
@@ -16,13 +16,13 @@ $ cmake .
 $ make
 ```
 
-This will create the executable `kilo`. You will need a C compiler with support
+This will create the executable `kris`. You will need a C compiler with support
 for the C11 standard. An up-to-date version of `gcc` will be fine.
 
 ## Usage
 
-Kilo can be invoked with or without an argument. If an argument is provided,
-Kilo will attempt to open that file and display it to screen. If no argument is
+Kris can be invoked with or without an argument. If an argument is provided,
+Kris will attempt to open that file and display it to screen. If no argument is
 provided, then an empty buffer will be loaded.
 
 ## VT100 Control Sequences

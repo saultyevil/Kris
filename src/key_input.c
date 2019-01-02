@@ -150,16 +150,30 @@ void process_keypress (void)
 {
   int c;
   int nreps;
+  static int quit_times = QUIT_TIMES;
 
-  c = read_keypress ();
-
-  switch (c)
+  switch (c = read_keypress ())
   {
+    // Append a new line
+    case '\r':
+      // TODO
+      break;
     // Quit the editor
     case CTRL_KEY ('q'):
+      if (editor.modified && quit_times > 0)
+      {
+        set_status_message ("ALART! File has unsaved changes. "
+              "Press Ctrl-Q %d more times to quit without saving.", quit_times);
+        quit_times--;
+        return;
+      }
       reset_display ();
       exit (0);
-      // Other keys...
+    // Save the text buffer to file
+    case CTRL_KEY ('s'):
+      save_file ();
+      break;
+    // Navigate using HOME and END keys for end and start of column
     case HOME_KEY:
       editor.cx = 0;
       break;
@@ -167,6 +181,7 @@ void process_keypress (void)
       if (editor.cy < editor.n_lines)
         editor.cx = (int) editor.lines[editor.cy].len;
       break;
+    // Navigate up and down the text buffering using PAGE UP and PAGE DOWN
     case PAGE_UP:
     case PAGE_DOWN:
       if (c == PAGE_UP)
@@ -181,12 +196,31 @@ void process_keypress (void)
       while (nreps--)
         move_cursor (c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
       break;
+    // Navigate the text buffer using the arrow keys
     case ARROW_UP:
     case ARROW_DOWN:
     case ARROW_RIGHT:
     case ARROW_LEFT:
       move_cursor (c);
+      break;
+    // Remove chars from the text buffer
+    case BACK_SPACE:
+    case CTRL_KEY('h'):
+    case DEL_KEY:
+      // In the case of delete, move the cursor right one step first
+      if (c == DEL_KEY)
+        move_cursor (ARROW_RIGHT);
+      delete_char ();
+      break;
+    // Ignore these keys
+    case CTRL_KEY ('l'):
+    case '\x1b':
+      break;
+    // Insert a char into the text buffer
     default:
+      insert_char (c);
       break;
   }
+
+  quit_times = QUIT_TIMES;
 }

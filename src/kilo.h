@@ -36,6 +36,7 @@
 #define FALSE 0
 #define VERSION "0.0.1"
 #define TAB_WIDTH 8
+#define QUIT_TIMES 2
 
 /*
  * Macro definitions
@@ -59,6 +60,7 @@ typedef struct
 {
   eline *lines;
   char *filename;
+  int modified;
   char status_msg[80];
   time_t status_msg_time;
   int cx, cy;
@@ -83,6 +85,7 @@ SCREEN_BUF obuf;
 
 enum keymap
 {
+  BACK_SPACE  = 127 ,
   ARROW_LEFT  = 1000,
   ARROW_RIGHT = 1001,
   ARROW_UP    = 1002,

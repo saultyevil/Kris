@@ -31,6 +31,7 @@ void init_editor (void)
   editor.n_lines = 0;
   editor.lines = NULL;
   editor.filename = NULL;
+  editor.modified = FALSE;
   editor.status_msg[0] = '\0';
   editor.status_msg_time = 0;
 

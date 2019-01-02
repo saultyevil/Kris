@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
   if (argc >= 2)
     open_file (argv[1]);
 
-  set_status_message ("HELP: Ctrl-Q to quit");
+  set_status_message ("HELP: Ctrl-S to save | Ctrl-Q to quit");
 
   while (TRUE)
   {
