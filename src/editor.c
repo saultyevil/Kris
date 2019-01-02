@@ -43,7 +43,7 @@ void write_editor_lines (SCREEN_BUF *sb)
       if (row == editor.n_screen_rows / 5 && editor.nlines == 0)
       {
         welcome_len = snprintf (welcome, sizeof (welcome),
-                                "Kilo editor -- version %s", VERSION);
+                                "Kris editor -- version %s", VERSION);
         if (welcome_len > editor.n_screen_cols)
           welcome_len = editor.n_screen_cols;
 
@@ -166,6 +166,28 @@ int convert_cx_to_rx (eline *line, int cx)
   }
 
   return rx;
+}
+
+// Convert the cursor position in the render array to a position in the char
+// array
+int convert_rx_to_cx (eline *line, int rx)
+{
+  int cx, cur_rx;
+
+  // Loop over the chars array and increment until cx reaches the same size as
+  // rx
+  cur_rx = 0;
+  for (cx = 0; cx < line->len; cx++)
+  {
+    if (line->chars[cx] == '\t')
+      cur_rx += (TAB_WIDTH - 1) - (cur_rx % TAB_WIDTH);
+    cur_rx++;
+
+    if (cur_rx > rx)
+      return cx;
+  }
+
+  return cx;
 }
 
 // Enable scrolling in the editor

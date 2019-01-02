@@ -173,6 +173,9 @@ void process_keypress (void)
     case CTRL_KEY ('s'):
       save_file ();
       break;
+    case CTRL_KEY ('f'):
+      keyword_search ();
+      break;
     // Navigate using HOME and END keys for end and start of column
     case HOME_KEY:
       editor.cx = 0;
@@ -214,7 +217,7 @@ void process_keypress (void)
       break;
     // Ignore these keys
     case CTRL_KEY ('l'):
-    case '\x1b':
+    case '\x1b':  // Escape key
       break;
     // Insert a char into the text buffer
     default:

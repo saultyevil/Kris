@@ -181,7 +181,7 @@ void save_file (void)
   }
 
   free (buf);
-  set_status_message ("Can't save file! I/O error: %s", strerror (errno));
+  set_status_message ("Can't save file. I/O error: %s", strerror (errno));
 }
 
 // Append a string to the screen buffer
@@ -202,4 +202,33 @@ void append_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len)
 void free_screen_buf (SCREEN_BUF *sb)
 {
   free (sb->buf);
+}
+
+// Search for a keyword within the text buffer
+void keyword_search (void)
+{
+  int i;
+  char *query, *match;
+  eline *line;
+
+  query = status_bar_prompt ("Search: %s (ESC to cancel)");
+  if (query == NULL)
+    return;
+
+  for (i = 0; i < editor.nlines; i++)
+  {
+    line = &editor.lines[i];
+    // Use strstr to check if the query substring is on the current row. If it
+    // isn't, then strstr returns NULL. To find the index, we can do some
+    // pointer arithmetic
+    match = strstr (line->render, query);
+    if (match)
+    {
+      editor.cy = i;
+      editor.cx = convert_rx_to_cx (line, (int) (match - line->render));
+      editor.row_offset = editor.nlines;
+    }
+  }
+
+  free (query);
 }
