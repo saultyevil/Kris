@@ -23,8 +23,8 @@
 void open_file (char *filename)
 {
   char *line;
-  size_t linecap;
-  ssize_t linelen;
+  size_t line_cap;
+  ssize_t line_len;
   FILE *input_file;
 
   if (!(input_file = fopen (filename, "r")))
@@ -32,16 +32,16 @@ void open_file (char *filename)
 
   // Read in EACH line of the input file and append to the text buffer
   line = NULL;
-  linecap = 0;
-  while ((linelen = getline (&line, &linecap, input_file) != -1))
+  line_cap = 0;
+  while ((line_len = getline (&line, &line_cap, input_file) != -1))
   {
     // TODO: replace this strlen with working version of getline return value
-    linelen = strlen (line);
+    line_len = strlen (line);
     // Strip off the return or new line chars and append to the text buffer
-    while (linelen > 0 &&
-                      (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
-      linelen--;
-    append_to_text_buffer (line, (size_t) linelen);
+    while (line_len > 0 &&
+                     (line[line_len - 1] == '\n' || line[line_len - 1] == '\r'))
+      line_len--;
+    append_to_text_buffer (line, (size_t) line_len);
   }
 
   free (line);

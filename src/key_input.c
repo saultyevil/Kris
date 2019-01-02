@@ -23,23 +23,53 @@
 // Move the cursor around the terminal
 void move_cursor (int key)
 {
+  size_t line_len;
+
+  // Create a row variable for the case where the cursor is on the last line
+  // of the file and use ternary operator to point to the last line if so
+  erow *line;
+  line = (editor.cy >= editor.n_editor_rows) ? NULL : &editor.lines[editor.cy];
+
   switch (key)
   {
     case ARROW_UP:
-      if (editor.y != 0) editor.y--;
+      if (editor.cy != 0)
+        editor.cy--;
       break;
     case ARROW_DOWN:
-      if (editor.y != editor.n_screen_rows - 1) editor.y++;
+      if (editor.cy < editor.n_editor_rows)
+        editor.cy++;
       break;
     case ARROW_RIGHT:
-      if (editor.x != editor.n_screen_cols - 1) editor.x++;
+      if (line && editor.cx < line->len)
+        editor.cx++;
+      // Add ability to press right to go to the start of the next line
+      else if (line && editor.cx == line->len)
+      {
+        editor.cy++;
+        editor.cx = 0;
+      }
       break;
     case ARROW_LEFT:
-      if (editor.x != 0) editor.x--;
+      if (editor.cx != 0)
+        editor.cx--;
+      // Add ability to press left to go to the end of the previous line
+      else if (editor.cy > 0)
+      {
+        editor.cy--;
+        editor.cx = (int) editor.lines[editor.cy].len;
+      }
       break;
     default:
       break;
   }
+
+  // Snap the cursor to the end of the line if moving from a longer to a shorter
+  // line whilst scrolling
+  line = (editor.cy >= editor.n_editor_rows) ? NULL : &editor.lines[editor.cy];
+  line_len = line ? line->len : 0;
+  if (editor.cx > line_len)
+    editor.cx = (int) line_len;
 }
 
 // Read a key press from the terminal
@@ -131,10 +161,10 @@ void process_keypress (void)
       exit (0);
       // Other keys...
     case HOME_KEY:
-      editor.y = 0;
+      editor.cy = 0;
       break;
     case END_KEY:
-      editor.y = editor.n_screen_rows - 1;
+      editor.cy = editor.n_screen_rows - 1;
       break;
     case PAGE_UP:
     case PAGE_DOWN:

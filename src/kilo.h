@@ -54,8 +54,9 @@ typedef struct erow
 typedef struct
 {
   erow *lines;
-  int x, y;
+  int cx, cy;
   int n_editor_rows;
+  int row_offset, col_offset;
   int n_screen_cols, n_screen_rows;
   struct termios curr_term_attr;
   struct termios orig_term_attr;

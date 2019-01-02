@@ -27,13 +27,16 @@
 void draw_editor_rows (SCREEN_BUF *sb)
 {
   char welcome[80];
-  int row, padding, welcome_len;
-  size_t linelen;
+  int row, padding, welcome_len, file_row;
+  size_t line_len;
 
   for (row = 0; row < editor.n_screen_rows; row++)
   {
+    // Index the line to offset due to the current level of scroll
+    file_row = row + editor.row_offset;
+
     // Write a ~ to indicate that this is an empty line
-    if (row >= editor.n_editor_rows)
+    if (file_row >= editor.n_editor_rows)
     {
       // Write the welcome message to the screen - should only show when the
       // text buffer is empty
@@ -57,13 +60,16 @@ void draw_editor_rows (SCREEN_BUF *sb)
       else
         append_to_screen_buf (sb, "~", 1);
     }
-    // Write out the text buffer, i.e. lines which can be edited
+    // Add the text buffer row to the screen buffer
     else
     {
-      linelen = editor.lines[row].len;
-      if (linelen > editor.n_screen_cols)
-        linelen = (size_t) editor.n_screen_cols;
-      append_to_screen_buf (sb, editor.lines[row].content, linelen);
+      line_len = editor.lines[file_row].len - editor.col_offset;
+      if (line_len < 0)
+        line_len = 0;
+      if (line_len > editor.n_screen_cols)
+        line_len = (size_t) editor.n_screen_cols;
+      append_to_screen_buf (sb,
+                  &editor.lines[file_row].content[editor.col_offset], line_len);
     }
 
     // aaa
@@ -74,11 +80,27 @@ void draw_editor_rows (SCREEN_BUF *sb)
   }
 }
 
+// Enable scrolling in the editor
+void scroll_editor_rows (void)
+{
+  // Check if the cursor is in the bounds of the visible window
+  if (editor.cy < editor.row_offset)
+    editor.row_offset = editor.cy;
+  if (editor.cy >= editor.row_offset + editor.n_screen_rows)
+    editor.row_offset = editor.cy - editor.n_screen_rows + 1;
+  if (editor.cx < editor.col_offset)
+    editor.col_offset = editor.cx;
+  if (editor.cx > editor.col_offset + editor.n_screen_cols)
+    editor.col_offset = editor.cx - editor.n_screen_cols + 1;
+}
+
 // Refresh the editor screen - i.e. the ui?
 void refresh_editor_screen (void)
 {
   char buf[32];
   SCREEN_BUF sb = SBUF_INIT;
+
+  scroll_editor_rows ();
 
   // Reset the VT100 mode and place the cursor into the home position
   // and write the editor rows to the buffer
@@ -87,7 +109,8 @@ void refresh_editor_screen (void)
   draw_editor_rows (&sb);
 
   // Reposition the cursor in the terminal window
-  snprintf (buf, sizeof (buf), "\x1b[%d;%dH", editor.y + 1, editor.x + 1);
+  snprintf (buf, sizeof (buf), "\x1b[%d;%dH",
+      (editor.cy - editor.row_offset) + 1, (editor.cx - editor.col_offset) + 1);
   append_to_screen_buf (&sb, buf, (int) strlen (buf));
 
   // Enable set mode in the terminal (VT100 again) and write out the entire
