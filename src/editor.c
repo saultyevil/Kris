@@ -73,11 +73,50 @@ void write_editor_rows (SCREEN_BUF *sb)
 
     // aaa
     append_to_screen_buf (sb, "\x1b[K", 3);
-    if (row < editor.n_screen_rows - 1)
-      append_to_screen_buf (sb, "\r\n", 2);
-
+    append_to_screen_buf (sb, "\r\n", 2);
   }
 }
+
+void write_status_bar (SCREEN_BUF *sb)
+{
+  int status_len, r_len;
+  size_t line_len;
+  char status[80], line_num[80];
+
+  // \x1b[7m will switch to inverted colours for ther terminal
+  append_to_screen_buf (sb, "\x1b[7m", 4);
+
+  // Add the filename and number of lines to the status bar
+  status_len = snprintf (status, sizeof (status), "%.20s - %d lines",
+         editor.filename ? editor.filename : "[No File]", editor.n_screen_rows);
+  if (status_len > editor.n_screen_cols)
+    status_len = editor.n_screen_cols;
+  append_to_screen_buf (sb, status, (size_t) status_len);
+
+  // Add the current line number to the status bar
+  r_len = snprintf (line_num, sizeof (line_num), "%d/%d", editor.cy + 1,
+                    editor.n_lines);
+
+  // Render spaces and the line number status message
+  line_len = (size_t) status_len;
+  while (line_len < editor.n_screen_cols)
+  {
+    if (editor.n_screen_cols - line_len == r_len)
+    {
+      append_to_screen_buf (sb, line_num, (size_t) r_len);
+      break;
+    }
+    else
+    {
+      append_to_screen_buf (sb, " ", 1);
+      line_len++;
+    }
+  }
+
+  // \x1b[m will revert back to normal formatting
+  append_to_screen_buf (sb, "\x1b[m", 3);
+}
+
 
 // Convert the cursor position in the chars array to a position in the render
 // array
@@ -128,10 +167,11 @@ void draw_editor_screen (void)
   scroll_editor_rows ();
 
   // Reset the VT100 mode and place the cursor into the home position
-  // and write the editor rows to the buffer
+  // and write the editor rows and status to the screen buffer
   append_to_screen_buf (&sb, "\x1b[?25l", 6);
   append_to_screen_buf (&sb, "\x1b[H", 3);
   write_editor_rows (&sb);
+  write_status_bar (&sb);
 
   // Reposition the cursor in the terminal window
   snprintf (buf, sizeof (buf), "\x1b[%d;%dH",
@@ -144,9 +184,6 @@ void draw_editor_screen (void)
   write (STDOUT_FILENO, sb.buf, sb.len);
   free_screen_buf (&sb);
 }
-
-
-
 
 // Update a row to replace special characters, i.e. turn \t into spaces
 void update_render_row (eline *line)

@@ -30,8 +30,11 @@ void init_editor (void)
   editor.col_offset = 0;
   editor.n_lines = 0;
   editor.lines = NULL;
+  editor.filename = NULL;
 
   // Get the size of the terminal window
   if (get_terminal_size (&editor.n_screen_cols, &editor.n_screen_rows) == -1)
     error ("Couldn't determine the size of the terminal window");
+  // Remove a single row as we will draw a status bar on the bottom row
+  editor.n_screen_rows -= 1;
 }

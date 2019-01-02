@@ -57,6 +57,7 @@ typedef struct
 typedef struct
 {
   eline *lines;
+  char *filename;
   int cx, cy;
   int rx;
   int n_lines;

@@ -27,6 +27,10 @@ void open_file (char *filename)
   ssize_t line_len;
   FILE *input_file;
 
+  free (editor.filename);
+  // strdup duplicates a string for a new pointer
+  editor.filename = strdup (filename);
+
   if (!(input_file = fopen (filename, "r")))
     error ("Unable to open input file");
 
