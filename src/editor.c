@@ -37,10 +37,10 @@ void draw_editor_rows (SCREEN_BUF *sb)
     {
       // Write the welcome message to the screen - should only show when the
       // text buffer is empty
-      if (row == editor.n_screen_rows / 3 && editor.n_editor_rows == 0)
+      if (row == editor.n_screen_rows / 5 && editor.n_editor_rows == 0)
       {
         welcome_len = snprintf (welcome, sizeof (welcome),
-                                "Kilo editor -- version %s\r\n", VERSION);
+                                "Kilo editor -- version %s", VERSION);
         if (welcome_len > editor.n_screen_cols)
           welcome_len = editor.n_screen_cols;
 
@@ -52,8 +52,7 @@ void draw_editor_rows (SCREEN_BUF *sb)
         }
         while (padding--)
           append_to_screen_buf (sb, " ", 1);
-
-        append_to_screen_buf (sb, welcome, welcome_len);
+        append_to_screen_buf (sb, welcome, (size_t) welcome_len);
       }
       else
         append_to_screen_buf (sb, "~", 1);
@@ -105,7 +104,7 @@ void append_to_text_buffer (char *s, size_t linelen)
 
   // Allocate another line of memory
   editor.lines = realloc (editor.lines, sizeof (erow) *
-                          (editor.n_editor_rows + 1));
+                                        (editor.n_editor_rows + 1));
 
   // Append text to the new text buffer line
   line_index = editor.n_editor_rows;

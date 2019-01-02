@@ -13,7 +13,6 @@
  * ************************************************************************** */
 
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,10 +22,10 @@
 
 void open_file (char *filename)
 {
-  FILE *input_file;
-  char  *line;
+  char *line;
   size_t linecap;
   ssize_t linelen;
+  FILE *input_file;
 
   if (!(input_file = fopen (filename, "r")))
     error ("Unable to open input file");
@@ -36,9 +35,11 @@ void open_file (char *filename)
   linecap = 0;
   while ((linelen = getline (&line, &linecap, input_file) != -1))
   {
+    // TODO: replace this strlen with working version of getline return value
+    linelen = strlen (line);
     // Strip off the return or new line chars and append to the text buffer
-    while (linelen > 0 && (line[linelen - 1] == '\n' ||
-                           line[linelen - 1] == '\r'))
+    while (linelen > 0 &&
+                      (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
       linelen--;
     append_to_text_buffer (line, (size_t) linelen);
   }
