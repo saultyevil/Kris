@@ -28,7 +28,7 @@ void move_cursor (int key)
   // Create a row variable for the case where the cursor is on the last line
   // of the file and use ternary operator to point to the last line if so
   eline *line;
-  line = (editor.cy >= editor.n_editor_rows) ? NULL : &editor.lines[editor.cy];
+  line = (editor.cy >= editor.n_lines) ? NULL : &editor.lines[editor.cy];
 
   switch (key)
   {
@@ -37,7 +37,7 @@ void move_cursor (int key)
         editor.cy--;
       break;
     case ARROW_DOWN:
-      if (editor.cy < editor.n_editor_rows)
+      if (editor.cy < editor.n_lines)
         editor.cy++;
       break;
     case ARROW_RIGHT:
@@ -66,7 +66,7 @@ void move_cursor (int key)
 
   // Snap the cursor to the end of the line if moving from a longer to a shorter
   // line whilst scrolling
-  line = (editor.cy >= editor.n_editor_rows) ? NULL : &editor.lines[editor.cy];
+  line = (editor.cy >= editor.n_lines) ? NULL : &editor.lines[editor.cy];
   line_len = line ? line->len : 0;
   if (editor.cx > line_len)
     editor.cx = (int) line_len;
@@ -161,13 +161,22 @@ void process_keypress (void)
       exit (0);
       // Other keys...
     case HOME_KEY:
-      editor.cy = 0;
+      editor.cx = 0;
       break;
     case END_KEY:
-      editor.cy = editor.n_screen_rows - 1;
+      if (editor.cy < editor.n_lines)
+        editor.cx = (int) editor.lines[editor.cy].len;
       break;
     case PAGE_UP:
     case PAGE_DOWN:
+      if (c == PAGE_UP)
+        editor.cy = editor.row_offset;
+      else
+      {
+        editor.cy = editor.row_offset + editor.n_screen_rows - 1;
+        if (editor.cy > editor.n_lines)
+          editor.cy = editor.n_lines;
+      }
       nreps = editor.n_screen_rows;
       while (nreps--)
         move_cursor (c == PAGE_UP ? ARROW_UP : ARROW_DOWN);

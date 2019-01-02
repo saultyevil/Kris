@@ -28,7 +28,7 @@ void init_editor (void)
   editor.rx = 0;
   editor.row_offset = 0;
   editor.col_offset = 0;
-  editor.n_editor_rows = 0;
+  editor.n_lines = 0;
   editor.lines = NULL;
 
   // Get the size of the terminal window

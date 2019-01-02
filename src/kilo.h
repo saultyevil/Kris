@@ -59,7 +59,7 @@ typedef struct
   eline *lines;
   int cx, cy;
   int rx;
-  int n_editor_rows;
+  int n_lines;
   int row_offset, col_offset;
   int n_screen_cols, n_screen_rows;
   struct termios curr_term_attr;

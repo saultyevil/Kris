@@ -35,11 +35,11 @@ void write_editor_rows (SCREEN_BUF *sb)
     file_row = row + editor.row_offset;
 
     // Write a ~ to indicate that this is an empty line
-    if (file_row >= editor.n_editor_rows)
+    if (file_row >= editor.n_lines)
     {
       // Write the welcome message to the screen - should only show when the
       // text buffer is empty
-      if (row == editor.n_screen_rows / 5 && editor.n_editor_rows == 0)
+      if (row == editor.n_screen_rows / 5 && editor.n_lines == 0)
       {
         welcome_len = snprintf (welcome, sizeof (welcome),
                                 "Kilo editor -- version %s", VERSION);
@@ -105,7 +105,7 @@ void scroll_editor_rows (void)
 {
   // Update the cursor to be in the correct position for the render array
   editor.rx = 0;
-  if (editor.cy < editor.n_editor_rows)
+  if (editor.cy < editor.n_lines)
     editor.rx = convert_cx_to_rx (&editor.lines[editor.cy], editor.cx);
 
   // Check if the cursor is in the bounds of the visible window
@@ -193,10 +193,10 @@ void append_to_text_buffer (char *s, size_t linelen)
 
   // Allocate another line of memory
   editor.lines = realloc (editor.lines, sizeof (eline) *
-                                                    (editor.n_editor_rows + 1));
+                                                    (editor.n_lines + 1));
 
   // Append text to the new text buffer line
-  line_index = editor.n_editor_rows;
+  line_index = editor.n_lines;
   editor.lines[line_index].len = linelen;
   editor.lines[line_index].chars = malloc (linelen + 1);
   memcpy (editor.lines[line_index].chars, s, linelen);
@@ -207,5 +207,5 @@ void append_to_text_buffer (char *s, size_t linelen)
   editor.lines[line_index].render = NULL;
   update_render_row (&editor.lines[line_index]);
 
-  editor.n_editor_rows++;
+  editor.n_lines++;
 }
