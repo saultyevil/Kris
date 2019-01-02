@@ -21,10 +21,13 @@
 
 
 // A
+void append_string_to_line (eline *dest_line, char *src, size_t append_len);
 void append_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len);
-void append_to_text_buffer (char *s, size_t linelen);
+void append_to_text_buffer (char *s, size_t line_len);
 // D
 void delete_char (void);
+void delete_char_in_line (eline *line, int insert_idx);
+void delete_line (int idx);
 void draw_editor_screen (void);
 // E
 void error (char *s);
@@ -36,6 +39,7 @@ int get_terminal_size (int *ncols, int *nrows);
 void init_editor (void);
 void init_terminal (void);
 void insert_char (int c);
+void insert_char_in_line (eline *line, int insert_idx, int c);
 // O
 void open_file (char *filename);
 // P
@@ -46,5 +50,7 @@ void reset_display (void);
 // S
 void save_file (void);
 void set_status_message (char *fmt, ...);
+// U
+void update_to_render_buffer (eline *line);
 
 #endif //KILO_FUNCTIONS_H

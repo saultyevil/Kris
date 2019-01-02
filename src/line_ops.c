@@ -1,0 +1,114 @@
+/* ***************************************************************************
+ *
+ * @file line_ops.c
+ *
+ * @date 02/01/2019
+ *
+ * @author E. J. Parkinson
+ *
+ * @brief
+ *
+ * @details
+ *
+ * ************************************************************************** */
+
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "kilo.h"
+
+
+// Append a row of text to the text buffer
+void append_to_text_buffer (char *s, size_t line_len)
+{
+  int line_index;
+
+  // Allocate another line of memory
+  editor.lines = realloc (editor.lines, sizeof (eline) * (editor.n_lines + 1));
+
+  // Append text to the new text buffer line
+  line_index = editor.n_lines;
+  editor.lines[line_index].len = line_len;
+  editor.lines[line_index].chars = malloc (line_len + 1);
+  memcpy (editor.lines[line_index].chars, s, line_len);
+  editor.lines[line_index].chars[line_len] = '\0';
+
+  // Update the rendering buffer for special characters
+  editor.lines[line_index].r_len = 0;
+  editor.lines[line_index].render = NULL;
+  update_to_render_buffer (&editor.lines[line_index]);
+
+  // Update total number of lines and number of modified lines
+  editor.n_lines++;
+  editor.modified++;
+}
+
+// Insert a char into the text buffer arrays
+void insert_char_in_line (eline *line, int insert_idx, int c)
+{
+  // Bounds check for insertion index
+  if (insert_idx < 0 || insert_idx > line->len)
+    insert_idx = (int) line->len;
+
+  // Insert the new char into chars array
+  // Use memmove as this is safer for memory overlap issues where we would lose
+  // the correct data to copy and update the render buffer
+  line->chars = realloc (line->chars, line->len + 2);
+  memmove (&line->chars[insert_idx + 1], &line->chars[insert_idx],
+           line->len - insert_idx + 1);
+  line->len++;
+  line->chars[insert_idx] = (char) c;
+  update_to_render_buffer (line);
+  editor.modified++;
+}
+
+// Delete a char in a text buffer array
+void delete_char_in_line (eline *line, int insert_idx)
+{
+  // Bounds check for insertion index
+  if (insert_idx < 0 || insert_idx > line->len)
+    return;
+
+  // We are essentially just moving everything to the left
+  memmove (&line->chars[insert_idx], &line->chars[insert_idx + 1],
+           line->len - insert_idx);
+  line->len--;
+  update_to_render_buffer (line);
+  editor.modified++;
+}
+
+// Free the memory of a line
+void free_line (eline *line)
+{
+  free (line->chars);
+  free (line->render);
+}
+
+// Delete an entire line
+void delete_line (int idx)
+{
+  // Bounds checking
+  if (idx < 0 || idx > editor.n_lines)
+    return;
+
+  // Essentially, we are freeing a line and then shifting the other lines up
+  // by one
+  free_line (&editor.lines[idx]);
+  memmove (&editor.lines[idx], &editor.lines[idx + 1],
+           sizeof (eline) * (editor.n_lines - idx - 1));
+  editor.n_lines--;
+  editor.modified++;
+}
+
+// Append a string to the end of a line
+void append_string_to_line (eline *dest_line, char *src, size_t append_len)
+{
+  // Allocate more memory for the line to account for the appended string
+  dest_line->chars = realloc (dest_line->chars, dest_line->len + append_len + 1);
+  memcpy (&dest_line->chars[dest_line->len], src, append_len);
+  dest_line->len += append_len;
+  dest_line->chars[dest_line->len] = '\0';
+  update_to_render_buffer (dest_line);
+  editor.modified++;
+}

@@ -24,7 +24,7 @@
 
 
 // Append each row of the editor screen to the output terminal
-void write_editor_rows (SCREEN_BUF *sb)
+void write_editor_lines (SCREEN_BUF *sb)
 {
   char welcome[80];
   int row, padding, welcome_len, file_row;
@@ -169,7 +169,7 @@ int convert_cx_to_rx (eline *line, int cx)
 }
 
 // Enable scrolling in the editor
-void scroll_editor_rows (void)
+void scroll_text_buffer (void)
 {
   // Update the cursor to be in the correct position for the render array
   editor.rx = 0;
@@ -193,13 +193,13 @@ void draw_editor_screen (void)
   char buf[32];
   SCREEN_BUF sb = SBUF_INIT;
 
-  scroll_editor_rows ();
+  scroll_text_buffer ();
 
   // Reset the VT100 mode and place the cursor into the home position
   // and write the editor rows and status to the screen buffer
   append_to_screen_buf (&sb, "\x1b[?25l", 6);
   append_to_screen_buf (&sb, "\x1b[H", 3);
-  write_editor_rows (&sb);
+  write_editor_lines (&sb);
   write_status_bar (&sb);
   write_message_bar (&sb);
 
@@ -253,66 +253,6 @@ void update_to_render_buffer (eline *line)
   line->r_len = ii;
 }
 
-// Append a row of text to the text buffer
-void append_to_text_buffer (char *s, size_t linelen)
-{
-  int line_index;
-
-  // Allocate another line of memory
-  editor.lines = realloc (editor.lines, sizeof (eline) *
-                                                    (editor.n_lines + 1));
-
-  // Append text to the new text buffer line
-  line_index = editor.n_lines;
-  editor.lines[line_index].len = linelen;
-  editor.lines[line_index].chars = malloc (linelen + 1);
-  memcpy (editor.lines[line_index].chars, s, linelen);
-  editor.lines[line_index].chars[linelen] = '\0';
-
-  // Update the rendering buffer for special characters
-  editor.lines[line_index].r_len = 0;
-  editor.lines[line_index].render = NULL;
-  update_to_render_buffer (&editor.lines[line_index]);
-
-  // Update total number of lines and number of modified lines
-  editor.n_lines++;
-  editor.modified++;
-}
-
-// Insert a char into the text buffer arrays
-void insert_char_to_row (eline *line, int insert_idx, int c)
-{
-  // Bounds check for insertion index
-  if (insert_idx < 0 || insert_idx > line->len)
-    insert_idx = (int) line->len;
-
-  // Insert the new char into chars array
-  // Use memmove as this is safer for memory overlap issues where we would lose
-  // the correct data to copy and update the render buffer
-  line->chars = realloc (line->chars, line->len + 2);
-  memmove (&line->chars[insert_idx + 1], &line->chars[insert_idx],
-           line->len - insert_idx + 1);
-  line->len++;
-  line->chars[insert_idx] = (char) c;
-  update_to_render_buffer (line);
-  editor.modified++;
-}
-
-// Delete a char in a text buffer array
-void delete_char_in_row (eline *line, int insert_idx)
-{
-  // Bounds check for insertion index
-  if (insert_idx < 0 || insert_idx > line->len)
-    return;
-
-  // We are essentially just moving everything to the left
-  memmove (&line->chars[insert_idx], &line->chars[insert_idx + 1],
-           line->len - insert_idx);
-  line->len--;
-  update_to_render_buffer (line);
-  editor.modified++;
-}
-
 // Insert a char control function
 void insert_char (int c)
 {
@@ -320,7 +260,7 @@ void insert_char (int c)
   if (editor.cy == editor.n_lines)
     append_to_text_buffer ("", 0);
 
-  insert_char_to_row (&editor.lines[editor.cy], editor.cx, c);
+  insert_char_in_line (&editor.lines[editor.cy], editor.cx, c);
   editor.cx++;
 }
 
@@ -329,14 +269,26 @@ void delete_char (void)
 {
   eline *line;
 
-  // Nothing to delete if we are past the last line in the file
+  // Nothing to delete if we are past the last line in the file or if the cursor
+  // is in the top left
   if (editor.cy == editor.n_lines)
+    return;
+  if (editor.cx == 0 && editor.cy == 0)
     return;
 
   line = &editor.lines[editor.cy];
   if (editor.cx > 0)
   {
-    delete_char_in_row (line, editor.cx - 1);
+    delete_char_in_line (line, editor.cx - 1);
     editor.cx--;
+  }
+  // If at the beginning of the line, append to the previous line and free the
+  // extra memory
+  else
+  {
+    editor.cx = (int) editor.lines[editor.cy - 1].len;
+    append_string_to_line (&editor.lines[editor.cy - 1], line->chars, line->len);
+    delete_line (editor.cy);
+    editor.cy--;
   }
 }
