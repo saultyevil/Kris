@@ -29,7 +29,7 @@ int main (int argc, char *argv[])
 
   while (TRUE)
   {
-    refresh_editor_screen ();
+    draw_editor_screen ();
     process_keypress ();
     if (errno != 0)
       break;

@@ -1,6 +1,7 @@
 #ifndef KILO_KILO_H
 #define KILO_KILO_H
 
+
 /* ***************************************************************************
  *
  * @file kilo.h
@@ -33,6 +34,7 @@
 #define TRUE 1
 #define FALSE 0
 #define VERSION "0.0.1"
+#define TAB_WIDTH 8
 
 /*
  * Macro definitions
@@ -45,16 +47,18 @@
  * Structures
  */
 
-typedef struct erow
+typedef struct
 {
-  size_t len;
-  char *content;
-} erow;
+  size_t len, r_len;
+  char *chars;
+  char *render;
+} eline;
 
 typedef struct
 {
-  erow *lines;
+  eline *lines;
   int cx, cy;
+  int rx;
   int n_editor_rows;
   int row_offset, col_offset;
   int n_screen_cols, n_screen_rows;

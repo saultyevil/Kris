@@ -27,7 +27,7 @@ void move_cursor (int key)
 
   // Create a row variable for the case where the cursor is on the last line
   // of the file and use ternary operator to point to the last line if so
-  erow *line;
+  eline *line;
   line = (editor.cy >= editor.n_editor_rows) ? NULL : &editor.lines[editor.cy];
 
   switch (key)

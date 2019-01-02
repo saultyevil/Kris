@@ -25,6 +25,7 @@ void init_editor (void)
   // Set the initial cursor position
   editor.cx = 0;
   editor.cy = 0;
+  editor.rx = 0;
   editor.row_offset = 0;
   editor.col_offset = 0;
   editor.n_editor_rows = 0;

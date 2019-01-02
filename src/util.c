@@ -1,14 +1,12 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 
 #include "kilo.h"
 
-int get_cursor_position (int *nrows, int *ncols);
 
 // Kill the program and print an error message and string s
 void error (char *s)
@@ -21,33 +19,10 @@ void error (char *s)
 // Refresh the terminal screen
 void reset_display (void)
 {
-
   // \x1b is the escape character
   // \x1b[ is an escape sequence
   write (STDOUT_FILENO, "\x1b[2J", 4);   // erase screen
   write (STDOUT_FILENO, "\x1b[H", 3);    // reposition the cursor to default
-}
-
-// Determine the size of the terminal window
-int get_terminal_size (int *ncols, int *nrows)
-{
-  struct winsize ws;
-
-  // If ioctl fails on the machine, we have to do this ugly workaround where we
-  // keep moving the cursor until the reach the end
-  if (ioctl (STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
-  {
-    if (write (STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12)
-      return -1;
-    return get_cursor_position (nrows, ncols);
-  }
-  else
-  {
-    *ncols = ws.ws_col;
-    *nrows = ws.ws_row;
-  }
-
-  return 0;
 }
 
 // Get the current position of the cursor
@@ -75,6 +50,28 @@ int get_cursor_position (int *nrows, int *ncols)
     return -1;
   if (sscanf (&buf[2], "%d;%d", ncols, nrows) != 2)
     return -1;
+
+  return 0;
+}
+
+// Determine the size of the terminal window
+int get_terminal_size (int *ncols, int *nrows)
+{
+  struct winsize ws;
+
+  // If ioctl fails on the machine, we have to do this ugly workaround where we
+  // keep moving the cursor until the reach the end
+  if (ioctl (STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
+  {
+    if (write (STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12)
+      return -1;
+    return get_cursor_position (nrows, ncols);
+  }
+  else
+  {
+    *ncols = ws.ws_col;
+    *nrows = ws.ws_row;
+  }
 
   return 0;
 }
