@@ -23,7 +23,7 @@
 // A
 void append_string_to_line (eline *dest_line, char *src, size_t append_len);
 void append_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len);
-void append_to_text_buffer (char *s, size_t line_len);
+void append_line_to_text_buffer (int insert_index, char *s, size_t line_len);
 // D
 void delete_char (void);
 void delete_char_in_line (eline *line, int insert_idx);
@@ -40,6 +40,7 @@ void init_editor (void);
 void init_terminal (void);
 void insert_char (int c);
 void insert_char_in_line (eline *line, int insert_idx, int c);
+void insert_new_line (void);
 // O
 void open_file (char *filename);
 // P

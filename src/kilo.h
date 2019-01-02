@@ -65,7 +65,7 @@ typedef struct
   time_t status_msg_time;
   int cx, cy;
   int rx;
-  int n_lines;
+  int nlines;
   int row_offset, col_offset;
   int n_screen_cols, n_screen_rows;
   struct termios curr_term_attr;

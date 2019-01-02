@@ -36,11 +36,11 @@ void write_editor_lines (SCREEN_BUF *sb)
     file_row = row + editor.row_offset;
 
     // Write a ~ to indicate that this is an empty line
-    if (file_row >= editor.n_lines)
+    if (file_row >= editor.nlines)
     {
       // Write the welcome message to the screen - should only show when the
       // text buffer is empty
-      if (row == editor.n_screen_rows / 5 && editor.n_lines == 0)
+      if (row == editor.n_screen_rows / 5 && editor.nlines == 0)
       {
         welcome_len = snprintf (welcome, sizeof (welcome),
                                 "Kilo editor -- version %s", VERSION);
@@ -124,7 +124,7 @@ void write_status_bar (SCREEN_BUF *sb)
 
   // Add the current line number to the status bar
   r_len = snprintf (line_num, sizeof (line_num), "%d/%d", editor.cy + 1,
-                    editor.n_lines);
+                    editor.nlines);
 
   // Render spaces and the line number status message
   line_len = (size_t) status_len;
@@ -173,7 +173,7 @@ void scroll_text_buffer (void)
 {
   // Update the cursor to be in the correct position for the render array
   editor.rx = 0;
-  if (editor.cy < editor.n_lines)
+  if (editor.cy < editor.nlines)
     editor.rx = convert_cx_to_rx (&editor.lines[editor.cy], editor.cx);
 
   // Check if the cursor is in the bounds of the visible window
@@ -257,11 +257,35 @@ void update_to_render_buffer (eline *line)
 void insert_char (int c)
 {
   // If the cursor is on the bottom line, append a new line
-  if (editor.cy == editor.n_lines)
-    append_to_text_buffer ("", 0);
+  if (editor.cy == editor.nlines)
+    append_line_to_text_buffer (editor.nlines, "", 0);
 
   insert_char_in_line (&editor.lines[editor.cy], editor.cx, c);
   editor.cx++;
+}
+
+// Insert a new, empty line to the text buffer
+void insert_new_line (void)
+{
+  eline *line;
+
+  // If we're at the start of a line, append a row above
+  if (editor.cx == 0)
+    append_line_to_text_buffer (editor.cy, "", 0);
+  // Split the line into two lines and then insert a row
+  else
+  {
+    line = &editor.lines[editor.cy];
+    append_line_to_text_buffer (editor.cy + 1, &line->chars[editor.cx],
+                                line->len - editor.cx);
+    line = &editor.lines[editor.cy];
+    line->len = (size_t) editor.cx;
+    line->chars[line->len] = '\0';
+    update_to_render_buffer (line);
+  }
+
+  editor.cy++;
+  editor.cx = 0;
 }
 
 // Delete a char control function
@@ -271,7 +295,7 @@ void delete_char (void)
 
   // Nothing to delete if we are past the last line in the file or if the cursor
   // is in the top left
-  if (editor.cy == editor.n_lines)
+  if (editor.cy == editor.nlines)
     return;
   if (editor.cx == 0 && editor.cy == 0)
     return;

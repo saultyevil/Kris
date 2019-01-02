@@ -28,7 +28,7 @@ void move_cursor (int key)
   // Create a row variable for the case where the cursor is on the last line
   // of the file and use ternary operator to point to the last line if so
   eline *line;
-  line = (editor.cy >= editor.n_lines) ? NULL : &editor.lines[editor.cy];
+  line = (editor.cy >= editor.nlines) ? NULL : &editor.lines[editor.cy];
 
   switch (key)
   {
@@ -37,7 +37,7 @@ void move_cursor (int key)
         editor.cy--;
       break;
     case ARROW_DOWN:
-      if (editor.cy < editor.n_lines)
+      if (editor.cy < editor.nlines)
         editor.cy++;
       break;
     case ARROW_RIGHT:
@@ -66,7 +66,7 @@ void move_cursor (int key)
 
   // Snap the cursor to the end of the line if moving from a longer to a shorter
   // line whilst scrolling
-  line = (editor.cy >= editor.n_lines) ? NULL : &editor.lines[editor.cy];
+  line = (editor.cy >= editor.nlines) ? NULL : &editor.lines[editor.cy];
   line_len = line ? line->len : 0;
   if (editor.cx > line_len)
     editor.cx = (int) line_len;
@@ -156,7 +156,7 @@ void process_keypress (void)
   {
     // Append a new line
     case '\r':
-      // TODO
+      insert_new_line ();
       break;
     // Quit the editor
     case CTRL_KEY ('q'):
@@ -178,7 +178,7 @@ void process_keypress (void)
       editor.cx = 0;
       break;
     case END_KEY:
-      if (editor.cy < editor.n_lines)
+      if (editor.cy < editor.nlines)
         editor.cx = (int) editor.lines[editor.cy].len;
       break;
     // Navigate up and down the text buffering using PAGE UP and PAGE DOWN
@@ -189,8 +189,8 @@ void process_keypress (void)
       else
       {
         editor.cy = editor.row_offset + editor.n_screen_rows - 1;
-        if (editor.cy > editor.n_lines)
-          editor.cy = editor.n_lines;
+        if (editor.cy > editor.nlines)
+          editor.cy = editor.nlines;
       }
       nreps = editor.n_screen_rows;
       while (nreps--)

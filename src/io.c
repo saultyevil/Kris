@@ -48,7 +48,7 @@ void open_file (char *filename)
     while (line_len > 0 &&
                      (line[line_len - 1] == '\n' || line[line_len - 1] == '\r'))
       line_len--;
-    append_to_text_buffer (line, (size_t) line_len);
+    append_line_to_text_buffer (editor.nlines, line, (size_t) line_len);
   }
 
   free (line);
@@ -65,14 +65,14 @@ char *rows_to_strings (size_t *buf_len)
 
   // Figure out the total number of chars in the text buffer
   tot_len = 0;
-  for (i = 0; i < editor.n_lines; i++)
+  for (i = 0; i < editor.nlines; i++)
     tot_len += editor.lines[i].len + 1;
   *buf_len = tot_len;
 
   // Copy the contents of each row to the end of the buffer and append a new
   // line character at the end of each row
   p = buf = malloc (tot_len);
-  for (i = 0; i < editor.n_lines; i++)
+  for (i = 0; i < editor.nlines; i++)
   {
     memcpy (p, editor.lines[i].chars, editor.lines[i].len);
     p += editor.lines[i].len;
