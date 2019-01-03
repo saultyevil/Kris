@@ -69,6 +69,8 @@ typedef struct
 {
   char *filetype;
   char **filematch;
+  char **keywords;
+  char *single_line_comment;
   int flags;
 } SYNTAX;
 
@@ -110,7 +112,10 @@ enum syntax_highlight_colours
   HL_NORMAL   = 0,
   HL_NUMBER   = 1,
   HL_MATCH    = 2,
-  HL_STRING   = 3
+  HL_STRING   = 3,
+  HL_COMMENT  = 4,
+  HL_KEYWORD1 = 5,
+  HL_KEYWORD2 = 6
 };
 
 

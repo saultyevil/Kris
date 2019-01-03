@@ -14,8 +14,6 @@
 
 
 #include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "kris.h"
 
@@ -25,12 +23,20 @@
 
 // C syntax highlighting
 char *C_EXTENSIONS[] = {".c", ".h", ".cpp", ".hpp", NULL};
+char *C_KEYWORDS[] = {
+  "switch", "if", "while", "for", "break", "continue", "return", "else",
+   "struct", "union", "typedef", "static", "enum", "class", "case","int|",
+   "long|", "double|", "float|", "char|", "unsigned|", "signed|", "void|",
+   NULL
+};
 
 // Syntax highlighting database
 SYNTAX HLDB[] = {
   {
     "C",
     C_EXTENSIONS,
+    C_KEYWORDS,
+    "//",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
@@ -88,8 +94,10 @@ void update_syntax_highlight (ELINE *line)
 {
   char c;
   unsigned char prev_hl;
-  size_t i;
-  int prev_sep, in_string;
+  size_t i, j, scs_len, key_len;
+  int prev_sep, in_string, kw2;
+  char *scs;
+  char **keywords;
 
   // Allocate space for syntax highlight array and originally set all of the
   // chars to have the normal colour
@@ -99,6 +107,13 @@ void update_syntax_highlight (ELINE *line)
   // If syntax highlighting is not set, return
   if (editor.syntax == NULL)
     return;
+
+  // Alias syntax keywords to something shorter
+  keywords = editor.syntax->keywords;
+
+  // Alias for single_line_comment to make things a bit neater
+  scs = editor.syntax->single_line_comment;
+  scs_len = scs ? strlen (scs) : 0;
 
   // Iterate over the entire line. prev_sep is to check that the previous char
   // is a separator char so we only colour in numbers and not numbers embedded
@@ -110,6 +125,16 @@ void update_syntax_highlight (ELINE *line)
   {
     c = line->render[i];
     prev_hl = (i > 0) ? line->hl[i - 1] : HL_NORMAL;
+
+    // Single line comments
+    if (scs_len && !in_string)
+    {
+      if (!strncmp (&line->render[i], scs, scs_len))
+      {
+        memset (&line->hl[i], HL_COMMENT, line->r_len - i);
+        break;
+      }
+    }
 
     // Strings
     if (editor.syntax->flags & HL_HIGHLIGHT_STRINGS)
@@ -157,6 +182,34 @@ void update_syntax_highlight (ELINE *line)
       }
     }
 
+    // Keywords -- make sure a separator came before the keyword
+    if (prev_sep)
+    {
+      for (j = 0; keywords[j]; j++)
+      {
+        key_len = strlen (keywords[j]);
+        // If the keyword is a keyword2, then there will be a | at the end which
+        // indicates it's a kw2, hence decrement key_len by 1 to remove it
+        kw2 = keywords[j][key_len - 1] == '|';
+        if (kw2)
+          key_len--;
+
+        // Keywords require a separator before and after hence check
+        if (!strncmp (&line->render[i], keywords[j], key_len) &&
+                                       is_separator (line->render[i + key_len]))
+        {
+          memset (&line->hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, key_len);
+          i += key_len;
+          break;
+        }
+      }
+      if (keywords[j] != NULL)
+      {
+        prev_sep = FALSE;
+        continue;
+      }
+    }
+
     prev_sep = is_separator (c);
     i++;
   }
@@ -168,8 +221,11 @@ int get_syntax_colour (int hl)
   switch (hl)
   {
     case HL_NUMBER: return 31;  // red
-    case HL_MATCH: return 34;   // purple or dark blue
+    case HL_MATCH: return 34;   // dark blue
     case HL_STRING: return 35;  // magenta
+    case HL_COMMENT: return 32;  // green
+    case HL_KEYWORD1: return 33;  // yellow
+    case HL_KEYWORD2: return 36;  // light blue
     default: return 37;
   }
 }
