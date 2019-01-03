@@ -174,7 +174,7 @@ void process_keypress (void)
       save_file ();
       break;
     case CTRL_KEY ('f'):
-      keyword_search ();
+      find ();
       break;
     // Navigate using HOME and END keys for end and start of column
     case HOME_KEY:

@@ -25,7 +25,7 @@
 
 
 // Display a prompt in the status bar, and let the user input a line of text
-char *status_bar_prompt (char *prompt_msg)
+char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int))
 {
   int c;
   size_t buf_len, buf_size;
@@ -54,6 +54,8 @@ char *status_bar_prompt (char *prompt_msg)
     else if (c == '\x1b')
     {
       set_status_message ("");
+      if (callback)
+        callback (buf, c);
       free (buf);
       return NULL;
     }
@@ -63,6 +65,8 @@ char *status_bar_prompt (char *prompt_msg)
       if (buf_len != 0)
       {
         set_status_message ("");
+        if (callback)
+          callback (buf, c);
         return buf;
       }
     }
@@ -78,6 +82,9 @@ char *status_bar_prompt (char *prompt_msg)
       buf[buf_len++] = (char) c;
       buf[buf_len] = '\0';
     }
+
+    if (callback)
+      callback (buf, c);
   }
 }
 
@@ -152,7 +159,7 @@ void save_file (void)
   // Prompt the user for a filename
   if (editor.filename == NULL)
   {
-    editor.filename = status_bar_prompt ("Save as: %s");
+    editor.filename = status_bar_prompt ("Save as: %s", NULL);
     if (editor.filename == NULL)
     {
       set_status_message ("Save aborted");
@@ -205,14 +212,13 @@ void free_screen_buf (SCREEN_BUF *sb)
 }
 
 // Search for a keyword within the text buffer
-void keyword_search (void)
+void keyword_search (char *query, int key)
 {
   int i;
-  char *query, *match;
+  char *match;
   eline *line;
 
-  query = status_bar_prompt ("Search: %s (ESC to cancel)");
-  if (query == NULL)
+  if (key == '\r' || key == '\x1b')
     return;
 
   for (i = 0; i < editor.nlines; i++)
@@ -227,8 +233,16 @@ void keyword_search (void)
       editor.cy = i;
       editor.cx = convert_rx_to_cx (line, (int) (match - line->render));
       editor.row_offset = editor.nlines;
+      break;
     }
   }
+}
 
-  free (query);
+// Find control function
+void find (void)
+{
+  char *query;
+
+  if ((query = status_bar_prompt ("Search: %s (ESC to cancel)", keyword_search)))
+    free (query);
 }

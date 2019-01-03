@@ -34,6 +34,7 @@ void draw_editor_screen (void);
 // E
 void error (char *s);
 // F
+void find (void);
 void free_screen_buf (SCREEN_BUF *sb);
 // G
 int get_terminal_size (int *ncols, int *nrows);
@@ -43,8 +44,6 @@ void init_terminal (void);
 void insert_char (int c);
 void insert_char_in_line (eline *line, int insert_idx, int c);
 void insert_new_line (void);
-// K
-void keyword_search (void);
 // O
 void open_file (char *filename);
 // P
@@ -55,7 +54,7 @@ void reset_display (void);
 // S
 void save_file (void);
 void set_status_message (char *fmt, ...);
-char *status_bar_prompt (char *prompt_msg);
+char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int));
 // U
 void update_to_render_buffer (eline *line);
 
