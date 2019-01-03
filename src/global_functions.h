@@ -1,5 +1,5 @@
-#ifndef KILO_FUNCTIONS_H
-#define KILO_FUNCTIONS_H
+#ifndef KRIS_FUNCTIONS_H
+#define KRIS_FUNCTIONS_H
 
 
 /* ***************************************************************************
@@ -17,18 +17,15 @@
  * ************************************************************************** */
 
 
-#include <stddef.h>
-
-
 // A
-void append_string_to_line (eline *dest_line, char *src, size_t append_len);
+void append_string_to_line (ELINE *dest_line, char *src, size_t append_len);
 void append_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len);
 void append_line_to_text_buffer (int insert_index, char *s, size_t line_len);
 // C
-int convert_rx_to_cx (eline *line, int rx);
+int convert_rx_to_cx (ELINE *line, int rx);
 // D
 void delete_char (void);
-void delete_char_in_line (eline *line, int insert_idx);
+void delete_char_in_line (ELINE *line, int insert_idx);
 void delete_line (int idx);
 void draw_editor_screen (void);
 // E
@@ -37,12 +34,13 @@ void error (char *s);
 void find (void);
 void free_screen_buf (SCREEN_BUF *sb);
 // G
+int get_syntax_colour (int hl);
 int get_terminal_size (int *ncols, int *nrows);
 // I
 void init_editor (void);
 void init_terminal (void);
 void insert_char (int c);
-void insert_char_in_line (eline *line, int insert_idx, int c);
+void insert_char_in_line (ELINE *line, int insert_idx, int c);
 void insert_new_line (void);
 // O
 void open_file (char *filename);
@@ -53,9 +51,11 @@ int read_keypress (void);
 void reset_display (void);
 // S
 void save_file (void);
+void select_syntax_highlighting (void);
 void set_status_message (char *fmt, ...);
 char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int));
 // U
-void update_to_render_buffer (eline *line);
+void update_syntax_highlight (ELINE *line);
+void update_to_render_buffer (ELINE *line);
 
 #endif //KILO_FUNCTIONS_H

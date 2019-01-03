@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Move the cursor around the terminal
@@ -27,7 +27,7 @@ void move_cursor (int key)
 
   // Create a row variable for the case where the cursor is on the last line
   // of the file and use ternary operator to point to the last line if so
-  eline *line;
+  ELINE *line;
   line = (editor.cy >= editor.nlines) ? NULL : &editor.lines[editor.cy];
 
   switch (key)

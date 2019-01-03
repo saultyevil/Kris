@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <termios.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Allows us to set the original terminal flags at exit

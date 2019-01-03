@@ -20,15 +20,17 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Append each row of the editor screen to the output terminal
 void write_editor_lines (SCREEN_BUF *sb)
 {
-  char welcome[80];
-  int row, padding, welcome_len, file_row;
-  size_t line_len;
+  char *c;
+  unsigned char *hl;
+  char welcome[80], buf[16];
+  int row, padding, welcome_len, file_row, colour, current_colour;
+  size_t i, line_len, buf_len;
 
   for (row = 0; row < editor.n_screen_rows; row++)
   {
@@ -68,11 +70,48 @@ void write_editor_lines (SCREEN_BUF *sb)
         line_len = 0;
       if (line_len > editor.n_screen_cols)
         line_len = (size_t) editor.n_screen_cols;
-      append_to_screen_buf (sb,
-                  &editor.lines[file_row].render[editor.col_offset], line_len);
+
+      // Extract the chars and highlight array
+      c = &editor.lines[file_row].render[editor.col_offset];
+      hl = &editor.lines[file_row].hl[editor.col_offset];
+
+      // Track current colour to avoid using an overzealous number of escape
+      // sequences changing colour
+      current_colour = -1;
+
+      // Iterate over each char in the render array and process each char
+      // individually
+      for (i = 0; i < line_len; i++)
+      {
+        // Append to the screen buffer using the default colour
+        if (hl[i] == HL_NORMAL)
+        {
+          if (current_colour != -1)
+          {
+            append_to_screen_buf (sb, "\x1b[39m", 5);
+            current_colour = -1;
+          }
+          append_to_screen_buf (sb, &c[i], 1);
+        }
+        // Get the syntax colour from wrapper function and print the colour
+        // escape sequence to a buffer
+        else
+        {
+          colour = get_syntax_colour (hl[i]);
+          if (colour != current_colour)
+          {
+            current_colour = colour;
+            buf_len = snprintf (buf, sizeof (buf), "\x1b[%dm", colour);
+            append_to_screen_buf (sb, buf, buf_len);
+          }
+          append_to_screen_buf (sb, &c[i], 1);
+        }
+      }
+
+      append_to_screen_buf (sb, "\x1b[39m", 5);
     }
 
-    // aaa
+    // Finish off the line by appending a new line
     append_to_screen_buf (sb, "\x1b[K", 3);
     append_to_screen_buf (sb, "\r\n", 2);
   }
@@ -123,8 +162,9 @@ void write_status_bar (SCREEN_BUF *sb)
   append_to_screen_buf (sb, status, (size_t) status_len);
 
   // Add the current line number to the status bar
-  r_len = snprintf (line_num, sizeof (line_num), "%d/%d", editor.cy + 1,
-                    editor.nlines);
+  r_len = snprintf (line_num, sizeof (line_num), "%s | %d/%d",
+   editor.syntax ? editor.syntax->filetype : "Unknown file type", editor.cy + 1,
+   editor.nlines);
 
   // Render spaces and the line number status message
   line_len = (size_t) status_len;
@@ -149,7 +189,7 @@ void write_status_bar (SCREEN_BUF *sb)
 
 // Convert the cursor position in the chars array to a position in the render
 // array
-int convert_cx_to_rx (eline *line, int cx)
+int convert_cx_to_rx (ELINE *line, int cx)
 {
   int rx;
   size_t i;
@@ -170,7 +210,7 @@ int convert_cx_to_rx (eline *line, int cx)
 
 // Convert the cursor position in the render array to a position in the char
 // array
-int convert_rx_to_cx (eline *line, int rx)
+int convert_rx_to_cx (ELINE *line, int rx)
 {
   int cx, cur_rx;
 
@@ -238,7 +278,7 @@ void draw_editor_screen (void)
 }
 
 // Update a row to replace special characters, i.e. turn \t into spaces
-void update_to_render_buffer (eline *line)
+void update_to_render_buffer (ELINE *line)
 {
   int ntabs;
   size_t i, ii;
@@ -271,8 +311,12 @@ void update_to_render_buffer (eline *line)
       line->render[ii++] = line->chars[i];
   }
 
+  // Terminate the string
   line->render[ii] = '\0';
   line->r_len = ii;
+
+  // Now update the syntax highlighting
+  update_syntax_highlight (line);
 }
 
 // Insert a char control function
@@ -289,7 +333,7 @@ void insert_char (int c)
 // Insert a new, empty line to the text buffer
 void insert_new_line (void)
 {
-  eline *line;
+  ELINE *line;
 
   // If we're at the start of a line, append a row above
   if (editor.cx == 0)
@@ -313,7 +357,7 @@ void insert_new_line (void)
 // Delete a char control function
 void delete_char (void)
 {
-  eline *line;
+  ELINE *line;
 
   // Nothing to delete if we are past the last line in the file or if the cursor
   // is in the top left

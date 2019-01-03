@@ -15,7 +15,7 @@
 
 #include <errno.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Main control function of kilo

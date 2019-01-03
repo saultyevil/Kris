@@ -16,7 +16,7 @@
 
 #include <stdlib.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Initialise the editor
@@ -34,6 +34,7 @@ void init_editor (void)
   editor.modified = FALSE;
   editor.status_msg[0] = '\0';
   editor.status_msg_time = 0;
+  editor.syntax = NULL;
 
   // Get the size of the terminal window
   if (get_terminal_size (&editor.n_screen_cols, &editor.n_screen_rows) == -1)

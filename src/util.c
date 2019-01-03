@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Kill the program and print an error message and string s

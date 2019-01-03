@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Append a row of text to the text buffer
@@ -26,9 +26,9 @@ void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
     return;
 
   // Allocate extra space
-  editor.lines = realloc (editor.lines,  sizeof (eline) * (editor.nlines + 1));
+  editor.lines = realloc (editor.lines,  sizeof (ELINE) * (editor.nlines + 1));
   memmove (&editor.lines[insert_index + 1], &editor.lines[insert_index],
-           sizeof (eline) * (editor.nlines - insert_index));
+           sizeof (ELINE) * (editor.nlines - insert_index));
 
   // Append text to the new text buffer line
   editor.lines[insert_index].len = line_len;
@@ -39,6 +39,7 @@ void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
   // Update the rendering buffer for special characters
   editor.lines[insert_index].r_len = 0;
   editor.lines[insert_index].render = NULL;
+  editor.lines[insert_index].hl = NULL;
   update_to_render_buffer (&editor.lines[insert_index]);
 
   // Update total number of lines and number of modified lines
@@ -47,7 +48,7 @@ void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
 }
 
 // Insert a char into the text buffer arrays
-void insert_char_in_line (eline *line, int insert_idx, int c)
+void insert_char_in_line (ELINE *line, int insert_idx, int c)
 {
   // Bounds check for insertion index
   if (insert_idx < 0 || insert_idx > line->len)
@@ -66,7 +67,7 @@ void insert_char_in_line (eline *line, int insert_idx, int c)
 }
 
 // Delete a char in a text buffer array
-void delete_char_in_line (eline *line, int insert_idx)
+void delete_char_in_line (ELINE *line, int insert_idx)
 {
   // Bounds check for insertion index
   if (insert_idx < 0 || insert_idx > line->len)
@@ -81,7 +82,7 @@ void delete_char_in_line (eline *line, int insert_idx)
 }
 
 // Append a string to the end of a line
-void append_string_to_line (eline *dest_line, char *src, size_t append_len)
+void append_string_to_line (ELINE *dest_line, char *src, size_t append_len)
 {
   // Allocate more memory for the line to account for the appended string
   dest_line->chars = realloc (dest_line->chars, dest_line->len + append_len + 1);
@@ -93,10 +94,11 @@ void append_string_to_line (eline *dest_line, char *src, size_t append_len)
 }
 
 // Free the memory of a line
-void free_line (eline *line)
+void free_line (ELINE *line)
 {
   free (line->chars);
   free (line->render);
+  free (line->hl);
 }
 
 // Delete an entire line
@@ -110,7 +112,7 @@ void delete_line (int idx)
   // by one
   free_line (&editor.lines[idx]);
   memmove (&editor.lines[idx], &editor.lines[idx + 1],
-           sizeof (eline) * (editor.nlines - idx - 1));
+           sizeof (ELINE) * (editor.nlines - idx - 1));
   editor.nlines--;
   editor.modified++;
 }

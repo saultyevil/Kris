@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "kilo.h"
+#include "kris.h"
 
 
 // Display a prompt in the status bar, and let the user input a line of text
@@ -100,8 +100,10 @@ void open_file (char *filename)
   // strdup duplicates a string for a new pointer
   editor.filename = strdup (filename);
 
+  select_syntax_highlighting ();
+
   if (!(input_file = fopen (filename, "r")))
-    error ("Unable to open input file");
+    error ("Unable to open file");
 
   // Read in EACH line of the input file and append to the text buffer
   line = NULL;
@@ -165,6 +167,8 @@ void save_file (void)
       set_status_message ("Save aborted");
       return;
     }
+
+    select_syntax_highlighting ();
   }
 
   // Retrieve the text buffer in the form of strings, create the file in 0644
@@ -209,91 +213,4 @@ void append_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len)
 void free_screen_buf (SCREEN_BUF *sb)
 {
   free (sb->buf);
-}
-
-// Search for a keyword within the text buffer
-void keyword_search (char *query, int key)
-{
-  size_t i;
-  int current;
-  char *match;
-  eline *line;
-  static int last_match = -1;
-  static int direction = 1;
-
-  // If the user presses enter or escape, return without doing anything
-  if (key == '\r' || key == '\x1b')
-  {
-    last_match = -1;
-    direction = 1;
-    return;
-  }
-  // Search forwards
-  else if (key == ARROW_RIGHT || key == ARROW_DOWN)
-    direction = 1;
-  // Search backwards
-  else if (key == ARROW_LEFT || key == ARROW_UP)
-    direction = -1;
-  // Search forwards
-  else
-  {
-    last_match = -1;
-    direction = 1;
-  }
-
-  // Set last match to be the line the line number where the query was last
-  // matched
-  if (last_match == -1)
-    direction = 1;
-  current = last_match;
-
-  for (i = 0; i < editor.nlines; i++)
-  {
-    // Increment current line search counter
-    current += direction;
-    if (current == -1)
-      current = editor.nlines - 1;
-    else if (current == editor.nlines)
-      current = 0;
-
-    line = &editor.lines[current];
-    // Use strstr to check if the query substring is on the current row. If it
-    // isn't, then strstr returns NULL. To find the index, we can do some
-    // pointer arithmetic
-    match = strstr (line->render, query);
-    if (match)
-    {
-      last_match = current;
-      editor.cy = current;
-      editor.cx = convert_rx_to_cx (line, (int) (match - line->render));
-      editor.row_offset = editor.nlines;
-      break;
-    }
-  }
-}
-
-// Find control function
-void find (void)
-{
-  char *query;
-  int saved_cx, saved_cy, saved_col_offset, saved_row_offset;
-
-  // Save the original position of the cursor and text buffer
-  saved_cx = editor.cx;
-  saved_cy = editor.cy;
-  saved_col_offset = editor.col_offset;
-  saved_row_offset = editor.row_offset;
-
-  if ((query = status_bar_prompt ("Search: %s (ESC to cancel |"
-                                  " Arrows to search)", keyword_search)))
-    free (query);
-  // If a query is not found, i.e. on pressing escape, then restore the cursor
-  // to it's original position
-  else
-  {
-    editor.cx = saved_cx;
-    editor.cy = saved_cy;
-    editor.col_offset = saved_col_offset;
-    editor.row_offset = saved_row_offset;
-  }
 }

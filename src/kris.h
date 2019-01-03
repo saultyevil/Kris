@@ -1,10 +1,10 @@
-#ifndef KILO_KILO_H
-#define KILO_KILO_H
+#ifndef KRIS_KRIS_H
+#define KRIS_KRIS_H
 
 
 /* ***************************************************************************
  *
- * @file kilo.h
+ * @file kris.h
  *
  * @date 01/01/2019
  *
@@ -34,9 +34,11 @@
 
 #define TRUE 1
 #define FALSE 0
-#define VERSION "0.0.1"
+#define VERSION "0.8.3"
 #define TAB_WIDTH 8
 #define QUIT_TIMES 2
+
+
 
 /*
  * Macro definitions
@@ -54,11 +56,25 @@ typedef struct
   size_t len, r_len;
   char *chars;
   char *render;
-} eline;
+  unsigned char *hl;
+} ELINE;
 
 typedef struct
 {
-  eline *lines;
+  size_t len;
+  char *buf;
+} SCREEN_BUF;
+
+typedef struct
+{
+  char *filetype;
+  char **filematch;
+  int flags;
+} SYNTAX;
+
+typedef struct
+{
+  ELINE *lines;
   char *filename;
   int modified;
   char status_msg[80];
@@ -70,18 +86,10 @@ typedef struct
   int n_screen_cols, n_screen_rows;
   struct termios curr_term_attr;
   struct termios orig_term_attr;
+  SYNTAX *syntax;
 } EDITOR_CONFIG;
 
 EDITOR_CONFIG editor;
-
-typedef struct
-{
-  size_t len;
-  char *buf;
-} SCREEN_BUF;
-
-SCREEN_BUF obuf;
-
 
 enum keymap
 {
@@ -97,6 +105,15 @@ enum keymap
   DEL_KEY     = 1008
 };
 
+enum syntax_highlight_colours
+{
+  HL_NORMAL   = 0,
+  HL_NUMBER   = 1,
+  HL_MATCH    = 2,
+  HL_STRING   = 3
+};
+
+
 #include "global_functions.h"
 
-#endif //KILO_KILO_H
+#endif
