@@ -72,6 +72,7 @@ typedef struct
   char *filetype;
   char **filematch;
   char **keywords;
+  char *pre_processor;
   char *single_line_comment;
   char *ml_comment_start;
   char *ml_comment_end;
@@ -120,7 +121,8 @@ enum syntax_highlight_colours
   HL_COMMENT    = 4,
   HL_KEYWORD1   = 5,
   HL_KEYWORD2   = 6,
-  HL_ML_COMMENT = 7
+  HL_ML_COMMENT = 7,
+  HL_PREPROCESS = 8
 };
 
 

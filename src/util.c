@@ -87,5 +87,21 @@ int get_terminal_size (int *ncols, int *nrows)
     *nrows = ws.ws_row;
   }
 
+  // Remove two rows for the status bar and prompt
+  editor.n_screen_rows -= 2;
+
   return 0;
+}
+
+// If a SIGWINCH is sent, update the terminal size
+void update_terminal_size (int unused)
+{
+  get_terminal_size (&editor.n_screen_cols, &editor.n_screen_rows);
+
+  if (editor.cy > editor.n_screen_rows)
+    editor.cy = editor.n_screen_rows - 1;
+  if (editor.cx > editor.n_screen_cols)
+    editor.cx = editor.n_screen_cols - 1;
+
+  refresh_editor_screen ();
 }

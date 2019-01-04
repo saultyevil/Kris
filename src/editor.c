@@ -172,7 +172,7 @@ void write_status_bar (SCREEN_BUF *sb)
 
   // Add the filename and number of lines to the status bar
   status_len = snprintf (status, sizeof (status), "%.20s - %d lines %s",
-         editor.filename ? editor.filename : "[No File]", editor.n_screen_rows,
+         editor.filename ? editor.filename : "[No File]", editor.nlines,
          editor.modified ? "(modified)" : "");
   if (status_len > editor.n_screen_cols)
     status_len = editor.n_screen_cols;
@@ -267,7 +267,7 @@ void scroll_text_buffer (void)
 }
 
 // Refresh the editor screen - i.e. the ui?
-void draw_editor_screen (void)
+void refresh_editor_screen (void)
 {
   char buf[32];
   SCREEN_BUF sb = SBUF_INIT;

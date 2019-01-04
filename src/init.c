@@ -13,7 +13,7 @@
  * ************************************************************************** */
 
 
-
+#include <signal.h>
 #include <stdlib.h>
 
 #include "kris.h"
@@ -22,6 +22,8 @@
 // Initialise the editor
 void init_editor (void)
 {
+  int unused = 0;
+
   // Set a bunch of initial values for the editor variables
   editor.cx = 0;
   editor.cy = 0;
@@ -36,10 +38,8 @@ void init_editor (void)
   editor.status_msg_time = 0;
   editor.syntax = NULL;
 
-  // Get the size of the terminal window
-  if (get_terminal_size (&editor.n_screen_cols, &editor.n_screen_rows) == -1)
-    error ("Couldn't determine the size of the terminal window");
-
-  // Remove a two rows as we will draw a status bar and message on these rows
-  editor.n_screen_rows -= 2;
+  // Get the size of the terminal window and use signal to monitor if the
+  // terminal window changes in size or not
+  update_terminal_size (unused);
+  signal (SIGWINCH, update_terminal_size);
 }

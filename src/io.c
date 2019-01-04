@@ -40,7 +40,7 @@ char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int))
   while (TRUE)
   {
     set_status_message (prompt_msg, buf);
-    draw_editor_screen ();
+    refresh_editor_screen ();
 
     c = read_keypress ();
 
@@ -89,7 +89,7 @@ char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int))
 }
 
 // Open a file and red into the text buffer
-void open_file (char *filename)
+int open_file (char *filename)
 {
   char *line;
   size_t line_cap;
@@ -100,10 +100,17 @@ void open_file (char *filename)
   // strdup duplicates a string for a new pointer
   editor.filename = strdup (filename);
 
-  select_syntax_highlighting ();
-
   if (!(input_file = fopen (filename, "r")))
-    error ("Unable to open file");
+  {
+    set_status_message ("Couldn't open file %s: %s", editor.filename,
+                         strerror (errno));
+    editor.filename = NULL;
+    // Set errno to 0, otherwise the main loop will exit
+    errno = 0;
+    return FALSE;
+  }
+
+  select_syntax_highlighting ();
 
   // Read in EACH line of the input file and append to the text buffer
   line = NULL;
@@ -123,6 +130,8 @@ void open_file (char *filename)
   if (fclose (input_file))
     error ("Couldn't close input file");
   editor.modified = FALSE;
+
+  return TRUE;
 }
 
 // Convert array of eline data types into a single string

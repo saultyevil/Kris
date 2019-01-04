@@ -86,21 +86,21 @@ SYNTAX HLDB[] = {
     "C",
     C_EXTENSIONS,
     C_KEYWORDS,
-    "//", "/*", "*/",
+    "#", "//", "/*", "*/",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
   {
     "FORTRAN",
     FORTRAN_EXTENTIONS,
     FORTRAN_KEYWORDS,
-    "!", "", "",
+    "!", "!", "", "",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
   {
     "PY",
     PYTHON_EXTENSIONS,
     PYTHON_KEYWORDS,
-    "#", "\"\"\"", "\"\"\"",
+    "", "#", "\"\"\"", "\"\"\"",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
@@ -158,9 +158,9 @@ void update_syntax_highlight (ELINE *line)
 {
   char c;
   unsigned char prev_hl;
-  size_t i, j, scs_len, mcs_len, mce_len, key_len;
+  size_t i, j, scs_len, mcs_len, mce_len, key_len, pp_len;
   int prev_sep, in_string, in_comment, kw2, changed;
-  char *scs, *mcs, *mce;
+  char *scs, *mcs, *mce, *pp;
   char **keywords;
 
   // Allocate space for syntax highlight array and originally set all of the
@@ -182,6 +182,8 @@ void update_syntax_highlight (ELINE *line)
   mcs_len = mcs ? strlen (mcs) : 0;
   mce = editor.syntax->ml_comment_end;
   mce_len = mce ? strlen (mce) : 0;
+  pp = editor.syntax->pre_processor;
+  pp_len = pp ? strlen (pp) : 0;
 
   // Iterate over the entire line. prev_sep is to check that the previous char
   // is a separator char so we only colour in numbers and not numbers embedded
@@ -196,6 +198,16 @@ void update_syntax_highlight (ELINE *line)
   {
     c = line->render[i];
     prev_hl = (i > 0) ? line->hl[i - 1] : HL_NORMAL;
+
+    // Preprocessor
+    if (pp_len && !in_string && !in_comment)
+    {
+      if (!strncmp (&line->render[i], pp, pp_len))
+      {
+        memset (&line->hl[i], HL_PREPROCESS, line->r_len - i);
+        break;
+      }
+    }
 
     // Single line comments
     if (scs_len && !in_string && !in_comment)
@@ -333,6 +345,7 @@ int get_syntax_colour (int hl)
 {
   switch (hl)
   {
+    case HL_PREPROCESS:
     case HL_NUMBER: return 31;  // red
     case HL_MATCH: return 34;   // dark blue
     case HL_STRING: return 35;  // magenta

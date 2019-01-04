@@ -27,12 +27,13 @@ int convert_rx_to_cx (ELINE *line, int rx);
 void delete_char (void);
 void delete_char_in_line (ELINE *line, int insert_idx);
 void delete_line (int idx);
-void draw_editor_screen (void);
+void refresh_editor_screen (void);
 // E
 void error (char *s);
 // F
 void find (void);
 void free_screen_buf (SCREEN_BUF *sb);
+void free_line (ELINE *line);
 // G
 int get_syntax_colour (int hl);
 int get_terminal_size (int *ncols, int *nrows);
@@ -43,7 +44,7 @@ void insert_char (int c);
 void insert_char_in_line (ELINE *line, int insert_idx, int c);
 void insert_new_line (void);
 // O
-void open_file (char *filename);
+int open_file (char *filename);
 // P
 void process_keypress (void);
 // R
@@ -57,5 +58,6 @@ char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int));
 // U
 void update_syntax_highlight (ELINE *line);
 void update_to_render_buffer (ELINE *line);
+void update_terminal_size (int unused);
 
 #endif //KILO_FUNCTIONS_H
