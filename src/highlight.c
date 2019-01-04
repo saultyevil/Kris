@@ -14,6 +14,8 @@
 
 
 #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "kris.h"
 
@@ -36,7 +38,7 @@ SYNTAX HLDB[] = {
     "C",
     C_EXTENSIONS,
     C_KEYWORDS,
-    "//",
+    "//", "/*", "*/",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
@@ -94,9 +96,9 @@ void update_syntax_highlight (ELINE *line)
 {
   char c;
   unsigned char prev_hl;
-  size_t i, j, scs_len, key_len;
-  int prev_sep, in_string, kw2;
-  char *scs;
+  size_t i, j, scs_len, mcs_len, mce_len, key_len;
+  int prev_sep, in_string, in_comment, kw2, changed;
+  char *scs, *mcs, *mce;
   char **keywords;
 
   // Allocate space for syntax highlight array and originally set all of the
@@ -114,6 +116,10 @@ void update_syntax_highlight (ELINE *line)
   // Alias for single_line_comment to make things a bit neater
   scs = editor.syntax->single_line_comment;
   scs_len = scs ? strlen (scs) : 0;
+  mcs = editor.syntax->ml_comment_start;
+  mcs_len = mcs ? strlen (mcs) : 0;
+  mce = editor.syntax->ml_comment_end;
+  mce_len = mce ? strlen (mce) : 0;
 
   // Iterate over the entire line. prev_sep is to check that the previous char
   // is a separator char so we only colour in numbers and not numbers embedded
@@ -121,18 +127,49 @@ void update_syntax_highlight (ELINE *line)
   i = 0;
   prev_sep = TRUE;
   in_string = FALSE;
+  // Initialise in_comment to be true if the previous row has an unclosed ml
+  // comment
+  in_comment = (line->idx > 0 && editor.lines[line->idx - 1].hl_open_comment);
   while (i < line->r_len)
   {
     c = line->render[i];
     prev_hl = (i > 0) ? line->hl[i - 1] : HL_NORMAL;
 
     // Single line comments
-    if (scs_len && !in_string)
+    if (scs_len && !in_string && !in_comment)
     {
       if (!strncmp (&line->render[i], scs, scs_len))
       {
         memset (&line->hl[i], HL_COMMENT, line->r_len - i);
         break;
+      }
+    }
+
+    // Multi line comments
+    if (mcs_len && mce_len && !in_string)
+    {
+      if (in_comment)
+      {
+        line->hl[i] = HL_ML_COMMENT;
+        if (!strncmp (&line->render[i], mce, mce_len))
+        {
+          memset (&line->hl[i], HL_ML_COMMENT, mce_len);
+          i += mce_len;
+          in_comment = FALSE;
+          prev_sep = TRUE;
+        }
+        else
+        {
+          i++;
+          continue;
+        }
+      }
+      else if (!strncmp (&line->render[i], mcs, mce_len))
+      {
+        memset (&line->hl[i], HL_ML_COMMENT, mcs_len);
+        i+= mcs_len;
+        in_comment = TRUE;
+        continue;
       }
     }
 
@@ -213,6 +250,13 @@ void update_syntax_highlight (ELINE *line)
     prev_sep = is_separator (c);
     i++;
   }
+
+  // Track to see if the ml comment has been closed.. if not make a recursive
+  // call to update the next line until the ml comment is closed
+  changed = (line->hl_open_comment != in_comment);
+  line->hl_open_comment = in_comment;
+  if (changed && line->idx + 1 < editor.nlines)
+    update_syntax_highlight (&editor.lines[line->idx + 1]);
 }
 
 // Convert an internal highlighting number to the correct one for the terminal
@@ -223,6 +267,7 @@ int get_syntax_colour (int hl)
     case HL_NUMBER: return 31;  // red
     case HL_MATCH: return 34;   // dark blue
     case HL_STRING: return 35;  // magenta
+    case HL_ML_COMMENT:
     case HL_COMMENT: return 32;  // green
     case HL_KEYWORD1: return 33;  // yellow
     case HL_KEYWORD2: return 36;  // light blue

@@ -162,8 +162,8 @@ void process_keypress (void)
     case CTRL_KEY ('q'):
       if (editor.modified && quit_times > 0)
       {
-        set_status_message ("ALART! File has unsaved changes. "
-              "Press Ctrl-Q %d more times to quit without saving.", quit_times);
+        set_status_message ("File has unsaved changes, "
+              "press Ctrl-Q %d more times to quit without saving", quit_times);
         quit_times--;
         return;
       }

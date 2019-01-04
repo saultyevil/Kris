@@ -14,11 +14,13 @@
 
 
 #include <time.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 
 #include "kris.h"
 
@@ -26,11 +28,11 @@
 // Append each row of the editor screen to the output terminal
 void write_editor_lines (SCREEN_BUF *sb)
 {
-  char *c;
+  char *c, sym;
   unsigned char *hl;
   char welcome[80], buf[16];
   int row, padding, welcome_len, file_row, colour, current_colour;
-  size_t i, line_len, buf_len;
+  size_t i, line_len, buf_len, c_len;
 
   for (row = 0; row < editor.n_screen_rows; row++)
   {
@@ -83,8 +85,23 @@ void write_editor_lines (SCREEN_BUF *sb)
       // individually
       for (i = 0; i < line_len; i++)
       {
+        // Handle control sequences (nonprintable chars) a bit better
+        if ( iscntrl (c[i]))
+        {
+          sym = (char) ((c[i] <= 26) ? '@' + c[i] : '?');
+          append_to_screen_buf (sb, "\x1b[7m", 4);
+          append_to_screen_buf (sb, &sym, 1);
+          append_to_screen_buf (sb, "\x1b[m", 3);
+          // Re-enable text formatting
+          if (current_colour != -1)
+          {
+            c_len = (size_t) snprintf (buf, sizeof (buf), "\x1b[%dm",
+                                       current_colour);
+            append_to_screen_buf (sb, buf, c_len);
+          }
+        }
         // Append to the screen buffer using the default colour
-        if (hl[i] == HL_NORMAL)
+        else if (hl[i] == HL_NORMAL)
         {
           if (current_colour != -1)
           {
@@ -101,7 +118,7 @@ void write_editor_lines (SCREEN_BUF *sb)
           if (colour != current_colour)
           {
             current_colour = colour;
-            buf_len = snprintf (buf, sizeof (buf), "\x1b[%dm", colour);
+            buf_len = (size_t) snprintf (buf, sizeof (buf), "\x1b[%dm", colour);
             append_to_screen_buf (sb, buf, buf_len);
           }
           append_to_screen_buf (sb, &c[i], 1);

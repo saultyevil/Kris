@@ -34,7 +34,7 @@
 
 #define TRUE 1
 #define FALSE 0
-#define VERSION "0.8.3"
+#define VERSION "1.0.0"
 #define TAB_WIDTH 8
 #define QUIT_TIMES 2
 
@@ -53,10 +53,12 @@
 
 typedef struct
 {
+  int idx;
   size_t len, r_len;
   char *chars;
   char *render;
   unsigned char *hl;
+  int hl_open_comment;
 } ELINE;
 
 typedef struct
@@ -71,6 +73,8 @@ typedef struct
   char **filematch;
   char **keywords;
   char *single_line_comment;
+  char *ml_comment_start;
+  char *ml_comment_end;
   int flags;
 } SYNTAX;
 
@@ -109,13 +113,14 @@ enum keymap
 
 enum syntax_highlight_colours
 {
-  HL_NORMAL   = 0,
-  HL_NUMBER   = 1,
-  HL_MATCH    = 2,
-  HL_STRING   = 3,
-  HL_COMMENT  = 4,
-  HL_KEYWORD1 = 5,
-  HL_KEYWORD2 = 6
+  HL_NORMAL     = 0,
+  HL_NUMBER     = 1,
+  HL_MATCH      = 2,
+  HL_STRING     = 3,
+  HL_COMMENT    = 4,
+  HL_KEYWORD1   = 5,
+  HL_KEYWORD2   = 6,
+  HL_ML_COMMENT = 7
 };
 
 

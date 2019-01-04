@@ -22,6 +22,8 @@
 // Append a row of text to the text buffer
 void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
 {
+  int i;
+
   if (insert_index < 0 || insert_index > editor.nlines)
     return;
 
@@ -29,6 +31,12 @@ void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
   editor.lines = realloc (editor.lines,  sizeof (ELINE) * (editor.nlines + 1));
   memmove (&editor.lines[insert_index + 1], &editor.lines[insert_index],
            sizeof (ELINE) * (editor.nlines - insert_index));
+
+  // Increment the line index when a new line is inserted
+  for (i = insert_index + 1; i <= editor.nlines; i++)
+    editor.lines[i].idx++;
+
+  editor.lines[insert_index].idx = insert_index;
 
   // Append text to the new text buffer line
   editor.lines[insert_index].len = line_len;
@@ -40,6 +48,7 @@ void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
   editor.lines[insert_index].r_len = 0;
   editor.lines[insert_index].render = NULL;
   editor.lines[insert_index].hl = NULL;
+  editor.lines[insert_index].hl_open_comment = 0;
   update_to_render_buffer (&editor.lines[insert_index]);
 
   // Update total number of lines and number of modified lines
@@ -104,6 +113,8 @@ void free_line (ELINE *line)
 // Delete an entire line
 void delete_line (int idx)
 {
+  int i;
+
   // Bounds checking
   if (idx < 0 || idx > editor.nlines)
     return;
@@ -113,6 +124,9 @@ void delete_line (int idx)
   free_line (&editor.lines[idx]);
   memmove (&editor.lines[idx], &editor.lines[idx + 1],
            sizeof (ELINE) * (editor.nlines - idx - 1));
+  // Decrement the line idx when a line is deleted
+  for (i = idx; i < editor.nlines - 1; i++)
+    editor.lines[idx].idx--;
   editor.nlines--;
   editor.modified++;
 }
