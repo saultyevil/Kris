@@ -1,7 +1,5 @@
 # Kris Text Editor
 
-**WIP: currently only works as a text viewer!**
-
 A simple text editor based on the Kilo text editor. Created by following a 
 tutorial found [here](https://viewsourcecode.org/snaptoken/kilo/index.html),
 thanks!
