@@ -2,7 +2,8 @@
 
 A simple text editor based on the Kilo text editor. Created by following a 
 tutorial found [here](https://viewsourcecode.org/snaptoken/kilo/index.html),
-thanks!
+thanks! The original source of Kilo can be found 
+[here](https://github.com/antirez/kilo).
 
 ## Building and Dependencies
 
