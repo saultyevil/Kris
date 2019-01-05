@@ -22,30 +22,3 @@ for the C11 standard. An up-to-date version of `gcc` will be fine.
 Kris can be invoked with or without an argument. If an argument is provided,
 Kris will attempt to open that file and display it to screen. If no argument is
 provided, then an empty buffer will be loaded.
-
-## VT100 Control Sequences
-
-```
-The following is a summary of the VT100 control sequences.
-
-Cursor Up	                            ESC A
-Cursor Down                          	    ESC B
-Cursor Right	                            ESC C
-Cursor Left	                            ESC D
-Select Special Graphics character set	    ESC F
-Select ASCII character set	            ESC G
-Cursor to home	                            ESC H
-Reverse line feed	                    ESC I
-Erase to end of screen	                    ESC J
-Erase to end of line	                    ESC K
-Direct cursor address	                    ESC Y l c	(see note 1)
-Identify	                            ESC Z	(see note 2)
-Enter alternate keypad mode	            ESC =
-Exit alternate keypad mode	            ESC >
-Enter ANSI mode	                            ESC <
-
-NOTE 1: Line and column numbers for direct cursor address are single
-        character codes whose values are the desired number plus 378.
-        Line and column numbers start at 1.
-NOTE 2: Response to ESC Z is ESC / Z.
-```
