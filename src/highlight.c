@@ -1,4 +1,4 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
  * @file highlight.c
  *
@@ -18,13 +18,14 @@
 #include "kris.h"
 #include "syntax.h"
 
-// @brief Return true if the char passed is considered a separator
+
+//! @brief Return true if the char passed is considered a separator
 int is_separator (int c)
 {
   return isspace (c) || c == '\0' || strchr (",.()+-/*=~%<>[];", c) != NULL;
 }
 
-// @brief Convert an internal highlight num to one for the terminal
+//! @brief Convert an internal highlight num to one for the terminal
 int syntax_get_colour (int hl)
 {
   switch (hl)
@@ -41,7 +42,7 @@ int syntax_get_colour (int hl)
   }
 }
 
-// @brief Match the file type and syntax highlighting
+//! @brief Match the file type and syntax highlighting
 void syntax_select_highlighting (void)
 {
   int is_ext;
@@ -76,7 +77,7 @@ void syntax_select_highlighting (void)
   }
 }
 
-// @brief Update the syntax highlight array for a single line
+//! @brief Update the syntax highlight array for a single line
 void syntax_update_highlighting (EDITOR_LINE *line)
 {
   char c;

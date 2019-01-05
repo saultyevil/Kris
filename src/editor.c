@@ -1,4 +1,4 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
  * @file editor.c
  *
@@ -18,10 +18,10 @@
 #include <string.h>
 #include <unistd.h>
 
-
 #include "kris.h"
 
-// @brief Append a string to the end of the screen buffer
+
+//! @brief Append a string to the end of the screen buffer
 void editor_add_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len)
 {
   char *new;
@@ -34,7 +34,7 @@ void editor_add_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len)
   sb->len += len;
 }
 
-// @brief Add a line to the render buffer which will be displayed to the screen
+//! @brief Add a line to the render buffer which will be displayed to the screen
 void editor_add_to_render_buffer (EDITOR_LINE *line)
 {
   int ntabs;
@@ -77,7 +77,7 @@ void editor_add_to_render_buffer (EDITOR_LINE *line)
   syntax_update_highlighting (line);
 }
 
-// @brief Insert a char control function
+//! @brief Insert a char control function
 void editor_insert_char (int c)
 {
   // If the cursor is on the bottom line, append a new line
@@ -88,7 +88,7 @@ void editor_insert_char (int c)
   editor.cx++;
 }
 
-// @brief Delete a char control function
+//! @brief Delete a char control function
 void editor_delete_char (void)
 {
   EDITOR_LINE *line;
@@ -115,7 +115,7 @@ void editor_delete_char (void)
   }
 }
 
-// @brief Insert a new, empty line to the text buffer
+//! @brief Insert a new, empty line to the text buffer
 void editor_insert_new_line (void)
 {
   EDITOR_LINE *line;
@@ -139,7 +139,7 @@ void editor_insert_new_line (void)
   editor.cx = 0;
 }
 
-// @brief Set a status message
+//! @brief Set a status message
 void editor_set_status_message (char *fmt, ...)
 {
   va_list ap;
@@ -149,7 +149,7 @@ void editor_set_status_message (char *fmt, ...)
   editor.status_msg_time = time (NULL);
 }
 
-// @brief Write the status bar for filename and line number to screen buffer
+//! @brief Write the status bar for filename and line number to screen buffer
 void editor_update_status_message (SCREEN_BUF *sb)
 {
   size_t line_len;
@@ -193,7 +193,7 @@ void editor_update_status_message (SCREEN_BUF *sb)
   editor_add_to_screen_buf (sb, "\r\n", 2);
 }
 
-// @brief Update the message in the message bar
+//! @brief Update the message in the message bar
 void editor_update_message_bar (SCREEN_BUF *sb)
 {
   size_t msg_len;
@@ -213,7 +213,7 @@ void editor_update_message_bar (SCREEN_BUF *sb)
     editor_add_to_screen_buf (sb, editor.status_msg, msg_len);
 }
 
-// @brief Enable scrolling in the editor
+//! @brief Enable scrolling in the editor
 void editor_scroll_text_buffer (void)
 {
   // Update the cursor to be in the correct position for the render array
@@ -234,7 +234,7 @@ void editor_scroll_text_buffer (void)
     editor.col_offset = editor.rx - editor.screen_cols + 1;
 }
 
-// @brief Update the entire screen buffer with the text buffer
+//! @brief Update the entire screen buffer with the text buffer
 void editor_update_screen_buffer (SCREEN_BUF *sb)
 {
   char *c, symbol;
@@ -342,7 +342,7 @@ void editor_update_screen_buffer (SCREEN_BUF *sb)
   }
 }
 
-// @brief Refresh the entire editor screen -- redraw everything
+//! @brief Refresh the entire editor screen -- redraw everything
 void editor_refresh_screen (void)
 {
   char buf[32];

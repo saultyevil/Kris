@@ -1,4 +1,4 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
  * @file kris.c
  *
@@ -10,12 +10,13 @@
  *
  * ************************************************************************** */
 
+
 #include <errno.h>
 
 #include "kris.h"
 
 
-// @brief Main control function of Kris
+//! @brief Main control function of Kris
 int main (int argc, char *argv[])
 {
   int file_found;

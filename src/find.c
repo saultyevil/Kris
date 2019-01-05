@@ -1,4 +1,4 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
  * @file find.c
  *
@@ -17,7 +17,7 @@
 #include "kris.h"
 
 
-// @brief Search for a keyword within the text buffer
+//! @brief Search for a keyword within the text buffer
 void find_keyword_search (char *query, int key)
 {
   EDITOR_LINE *line;
@@ -97,7 +97,7 @@ void find_keyword_search (char *query, int key)
   }
 }
 
-// @brief The main find control function
+//! @brief The main find control function
 void find (void)
 {
   char *query;

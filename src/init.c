@@ -1,4 +1,4 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
  * @file init.c
  *
@@ -6,9 +6,7 @@
  *
  * @author E. J. Parkinson
  *
- * @brief
- *
- * @details
+ * @brief Initialise editor values and screen.
  *
  * ************************************************************************** */
 
@@ -18,7 +16,7 @@
 #include "kris.h"
 
 
-// Initialise the editor
+//! @brief Initialise the editor
 void editor_init (void)
 {
   int unused = 0;  // This var is unused but passed for signal

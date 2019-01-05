@@ -1,6 +1,6 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
- * @file line_ops.c
+ * @file lines.c
  *
  * @date 02/01/2019
  *
@@ -17,7 +17,7 @@
 #include "kris.h"
 
 
-// @brief Append a line of text to the text buffer in editor_config
+//! @brief Append a line of text to the text buffer in editor_config
 void line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
 {
   int i;
@@ -52,7 +52,7 @@ void line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
   editor.modified++;
 }
 
-// Insert a char into the text buffer arrays
+//! Insert a char into the text buffer arrays
 void line_insert_char (EDITOR_LINE *line, int insert_idx, int c)
 {
   if (insert_idx < 0 || insert_idx > line->len)
@@ -68,7 +68,7 @@ void line_insert_char (EDITOR_LINE *line, int insert_idx, int c)
   editor_add_to_render_buffer (line);
 }
 
-// @brief Delete a char in a char buffer array
+//! @brief Delete a char in a char buffer array
 void line_delete_char (EDITOR_LINE *line, int insert_idx)
 {
   if (insert_idx < 0 || insert_idx > line->len)
@@ -82,7 +82,7 @@ void line_delete_char (EDITOR_LINE *line, int insert_idx)
   editor_add_to_render_buffer (line);
 }
 
-// @brief Append a string to the end of a line
+//! @brief Append a string to the end of a line
 void line_add_string_to_text_buffer (EDITOR_LINE *dest_line, char *src,
                                      size_t append_len)
 {
@@ -96,7 +96,7 @@ void line_add_string_to_text_buffer (EDITOR_LINE *dest_line, char *src,
   editor_add_to_render_buffer (dest_line);
 }
 
-// @brief Free the memory of a line
+//! @brief Free the memory of a line
 void util_free_line (EDITOR_LINE *line)
 {
   free (line->chars);
@@ -104,7 +104,7 @@ void util_free_line (EDITOR_LINE *line)
   free (line->hl);
 }
 
-// @brief Delete an entire line
+//! @brief Delete an entire line
 void line_delete (int idx)
 {
   int i;

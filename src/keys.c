@@ -1,4 +1,4 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
  * @file key_input.c
  *
@@ -18,7 +18,7 @@
 #include "kris.h"
 
 
-// @brief Move the cursor around the terminal
+//! @brief Move the cursor around the terminal
 void kp_move_cursor (int key)
 {
   size_t line_len;
@@ -66,7 +66,7 @@ void kp_move_cursor (int key)
     editor.cx = (int) line_len;
 }
 
-// @brief Read a key press from the terminal
+//! @brief Read a key press from the terminal
 int kp_read_keypress (void)
 {
   char c;
@@ -161,7 +161,7 @@ int kp_read_keypress (void)
   return c;
 }
 
-// @brief Process a key input from the terminal
+//! @brief Process a key input from the terminal
 void kp_process_keypress (void)
 {
   int c;

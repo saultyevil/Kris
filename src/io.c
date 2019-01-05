@@ -1,4 +1,4 @@
-/* ***************************************************************************
+/** **************************************************************************
  *
  * @file io.c
  *
@@ -6,9 +6,7 @@
  *
  * @author E. J. Parkinson
  *
- * @brief
- *
- * @details
+ * @brief Functions for IO, i.e. reading and saving files.
  *
  * ************************************************************************** */
 
@@ -24,7 +22,7 @@
 #include "kris.h"
 
 
-// @brief Display a prompt in the status bar, and input text
+//! @brief Display a prompt in the status bar, and input text
 char *io_status_bar_prompt (char *prompt_msg, void (*callback) (char *, int))
 {
   int c;
@@ -88,7 +86,7 @@ char *io_status_bar_prompt (char *prompt_msg, void (*callback) (char *, int))
   }
 }
 
-// @brief Open a file and read into the text buffer
+//! @brief Open a file and read into the text buffer
 int io_read_file (char *filename)
 {
   char *line;
@@ -134,7 +132,7 @@ int io_read_file (char *filename)
   return TRUE;
 }
 
-// @brief Convert an array of ELINEs into a single string
+//! @brief Convert an array of ELINEs into a single string
 char *io_convert_elines_to_string (size_t *buf_len)
 {
   char *buf, *p;
@@ -163,7 +161,7 @@ char *io_convert_elines_to_string (size_t *buf_len)
   return buf;
 }
 
-// @brief Save the text buffer to file
+//! @brief Save the text buffer to file
 void io_save_file (void)
 {
   char *buf;
