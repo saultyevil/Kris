@@ -17,19 +17,19 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "kris.h"
 
 
-// Display a prompt in the status bar, and let the user input a line of text
-char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int))
+// @brief Display a prompt in the status bar, and input text
+char *io_status_bar_prompt (char *prompt_msg, void (*callback) (char *, int))
 {
   int c;
-  size_t buf_len, buf_size;
   char *buf;
+  size_t buf_len, buf_size;
 
   buf_len = 0;
   buf_size = 128;
@@ -39,38 +39,38 @@ char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int))
   // Keep looping until buf can be returned
   while (TRUE)
   {
-    set_status_message (prompt_msg, buf);
-    refresh_editor_screen ();
+    editor_set_status_message (prompt_msg, buf);
+    editor_refresh_screen ();
 
-    c = read_keypress ();
+    c = kp_read_keypress ();
 
-    // Allow a user to delete something in the status prompt
+    // Allow user to delete in the status prompt
     if (c == DEL_KEY || c == CTRL_KEY ('h') || c == BACK_SPACE)
     {
       if (buf_len != 0)
         buf[--buf_len] = '\0';
     }
-    // Cancel and return NULL if escape is pressed
+    // Cancel and return if escape is pressed
     else if (c == '\x1b')
     {
-      set_status_message ("");
+      editor_set_status_message ("");
       if (callback)
         callback (buf, c);
       free (buf);
       return NULL;
     }
-    // If enter is pressed
+    // Return buf if enter is pressed
     else if (c == '\r')
     {
       if (buf_len != 0)
       {
-        set_status_message ("");
+        editor_set_status_message ("");
         if (callback)
           callback (buf, c);
         return buf;
       }
     }
-    // Else if not a control sequence keep adding chars to buf
+    // If not a control sequence add chars to buf
     else if (!iscntrl (c) && c < 128)
     {
       if (buf_len == buf_size - 1)
@@ -88,8 +88,8 @@ char *status_bar_prompt (char *prompt_msg, void (*callback)(char *, int))
   }
 }
 
-// Open a file and red into the text buffer
-int open_file (char *filename)
+// @brief Open a file and read into the text buffer
+int io_read_file (char *filename)
 {
   char *line;
   size_t line_cap;
@@ -97,45 +97,45 @@ int open_file (char *filename)
   FILE *input_file;
 
   free (editor.filename);
-  // strdup duplicates a string for a new pointer
-  editor.filename = strdup (filename);
+  editor.filename = strdup (filename);  // Safer than strcpy?
 
+  // Open the file and update the syntax highlighting
   if (!(input_file = fopen (filename, "r")))
   {
-    set_status_message ("Couldn't open file %s: %s", editor.filename,
-                         strerror (errno));
+    // Handle if the file can't be found
+    editor_set_status_message ("Couldn't open file %s: %s", editor.filename,
+                               strerror (errno));
     editor.filename = NULL;
-    // Set errno to 0, otherwise the main loop will exit
-    errno = 0;
+    errno = 0; // Set errno to 0, otherwise the main loop will exit
     return FALSE;
   }
 
-  select_syntax_highlighting ();
+  syntax_select_highlighting ();
 
   // Read in EACH line of the input file and append to the text buffer
   line = NULL;
   line_cap = 0;
   while ((line_len = getline (&line, &line_cap, input_file) != -1))
   {
-    // TODO: replace this strlen with working version of getline return value
-    line_len = strlen (line);
-    // Strip off the return or new line chars and append to the text buffer
+    line_len = strlen (line);  // TODO: fix getline return value returning 1
+
+    // Strip off the return or new line chars and add to the text buffer
     while (line_len > 0 &&
                      (line[line_len - 1] == '\n' || line[line_len - 1] == '\r'))
       line_len--;
-    append_line_to_text_buffer (editor.nlines, line, (size_t) line_len);
+    line_add_to_text_buffer (editor.nlines, line, (size_t) line_len);
   }
 
   free (line);
   if (fclose (input_file))
-    error ("Couldn't close input file");
+    util_exit ("Couldn't close input file");
   editor.modified = FALSE;
 
   return TRUE;
 }
 
-// Convert array of eline data types into a single string
-char *rows_to_strings (size_t *buf_len)
+// @brief Convert an array of ELINEs into a single string
+char *io_convert_elines_to_string (size_t *buf_len)
 {
   char *buf, *p;
   size_t i, tot_len;
@@ -146,8 +146,11 @@ char *rows_to_strings (size_t *buf_len)
     tot_len += editor.lines[i].len + 1;
   *buf_len = tot_len;
 
-  // Copy the contents of each row to the end of the buffer and append a new
-  // line character at the end of each row
+  /*
+   * Copy the contents of each row to the end of the buffer and append a new
+   * line character at the end of each row
+   */
+
   p = buf = malloc (tot_len);
   for (i = 0; i < editor.nlines; i++)
   {
@@ -160,39 +163,42 @@ char *rows_to_strings (size_t *buf_len)
   return buf;
 }
 
-// Save the text buffer to file
-void save_file (void)
+// @brief Save the text buffer to file
+void io_save_file (void)
 {
-  size_t buf_len;
   char *buf;
   int file_desc;
+  size_t buf_len;
 
-  // Prompt the user for a filename
+  // Prompt for filename and set syntax highlighting
   if (editor.filename == NULL)
   {
-    editor.filename = status_bar_prompt ("Save as: %s", NULL);
+    editor.filename = io_status_bar_prompt ("Save as: %s", NULL);
     if (editor.filename == NULL)
     {
-      set_status_message ("Save aborted");
+      editor_set_status_message ("Save aborted");
       return;
     }
 
-    select_syntax_highlighting ();
+    syntax_select_highlighting ();
   }
 
-  // Retrieve the text buffer in the form of strings, create the file in 0644
-  // mode and then write to file
-  buf = rows_to_strings (&buf_len);
+  /*
+   * Retrieve the text buffer in the form of strings, create the file in 0644
+   * mode and then write to file
+   */
+
+  buf = io_convert_elines_to_string (&buf_len);
   if (((file_desc = open (editor.filename, O_RDWR | O_CREAT, 0644)) != -1))
   {
-    if (ftruncate (file_desc, buf_len) != -1)
+    if (ftruncate (file_desc, (off_t) buf_len) != -1)
     {
       if (write (file_desc, buf, buf_len) == buf_len)
       {
         close (file_desc);
         free (buf);
         editor.modified = FALSE;
-        set_status_message ("%d bytes written to disk", buf_len);
+        editor_set_status_message ("%d bytes written to disk", buf_len);
         return;
       }
     }
@@ -201,25 +207,6 @@ void save_file (void)
   }
 
   free (buf);
-  set_status_message ("Can't save file. I/O error: %s", strerror (errno));
-}
-
-// Append a string to the screen buffer
-void append_to_screen_buf (SCREEN_BUF *sb, char *s, size_t len)
-{
-  char *new;
-  if (!(new = realloc (sb->buf, sb->len + len)))
-    error ("Couldn't allocate memory for screen buffer");
-
-  // Copy string s onto the end of the screen buffer and update the buffer
-  // pointer in the SCREEN_BUF struct
-  memcpy (&new[sb->len], s, len);
-  sb->buf = new;
-  sb->len += len;
-}
-
-// Free the screen buffer
-void free_screen_buf (SCREEN_BUF *sb)
-{
-  free (sb->buf);
+  editor_set_status_message (
+                            "Can't save file. I/O error: %s", strerror (errno));
 }

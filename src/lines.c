@@ -6,9 +6,7 @@
  *
  * @author E. J. Parkinson
  *
- * @brief
- *
- * @details
+ * @brief Functions for adding chars and lines to the various text buffers.
  *
  * ************************************************************************** */
 
@@ -19,37 +17,35 @@
 #include "kris.h"
 
 
-// Append a row of text to the text buffer
-void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
+// @brief Append a line of text to the text buffer in editor_config
+void line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
 {
   int i;
 
   if (insert_index < 0 || insert_index > editor.nlines)
     return;
 
-  // Allocate extra space
-  editor.lines = realloc (editor.lines,  sizeof (ELINE) * (editor.nlines + 1));
+  // Allocate extra space, shift the lines down by 1 and insert new line
+  editor.lines = realloc (editor.lines,
+                          sizeof (EDITOR_LINE) * (editor.nlines + 1));
   memmove (&editor.lines[insert_index + 1], &editor.lines[insert_index],
-           sizeof (ELINE) * (editor.nlines - insert_index));
-
-  // Increment the line index when a new line is inserted
+           sizeof (EDITOR_LINE) * (editor.nlines - insert_index));
   for (i = insert_index + 1; i <= editor.nlines; i++)
     editor.lines[i].idx++;
-
   editor.lines[insert_index].idx = insert_index;
 
-  // Append text to the new text buffer line
+  // Append text to the new text line
   editor.lines[insert_index].len = line_len;
   editor.lines[insert_index].chars = malloc (line_len + 1);
   memcpy (editor.lines[insert_index].chars, s, line_len);
   editor.lines[insert_index].chars[line_len] = '\0';
 
-  // Update the rendering buffer for special characters
+  // Update the render buffer
   editor.lines[insert_index].r_len = 0;
   editor.lines[insert_index].render = NULL;
   editor.lines[insert_index].hl = NULL;
   editor.lines[insert_index].hl_open_comment = 0;
-  update_to_render_buffer (&editor.lines[insert_index]);
+  editor_add_to_render_buffer (&editor.lines[insert_index]);
 
   // Update total number of lines and number of modified lines
   editor.nlines++;
@@ -57,76 +53,73 @@ void append_line_to_text_buffer (int insert_index, char *s, size_t line_len)
 }
 
 // Insert a char into the text buffer arrays
-void insert_char_in_line (ELINE *line, int insert_idx, int c)
+void line_insert_char (EDITOR_LINE *line, int insert_idx, int c)
 {
-  // Bounds check for insertion index
   if (insert_idx < 0 || insert_idx > line->len)
     insert_idx = (int) line->len;
 
-  // Insert the new char into chars array
-  // Use memmove as this is safer for memory overlap issues where we would lose
-  // the correct data to copy and update the render buffer
+  // Allocate more memory, shift chars right by 1 and insert new char
   line->chars = realloc (line->chars, line->len + 2);
   memmove (&line->chars[insert_idx + 1], &line->chars[insert_idx],
            line->len - insert_idx + 1);
   line->len++;
   line->chars[insert_idx] = (char) c;
-  update_to_render_buffer (line);
   editor.modified++;
+  editor_add_to_render_buffer (line);
 }
 
-// Delete a char in a text buffer array
-void delete_char_in_line (ELINE *line, int insert_idx)
+// @brief Delete a char in a char buffer array
+void line_delete_char (EDITOR_LINE *line, int insert_idx)
 {
-  // Bounds check for insertion index
   if (insert_idx < 0 || insert_idx > line->len)
     return;
 
-  // We are essentially just moving everything to the left
+  // Essentially just moving every char to the left
   memmove (&line->chars[insert_idx], &line->chars[insert_idx + 1],
            line->len - insert_idx);
   line->len--;
-  update_to_render_buffer (line);
   editor.modified++;
+  editor_add_to_render_buffer (line);
 }
 
-// Append a string to the end of a line
-void append_string_to_line (ELINE *dest_line, char *src, size_t append_len)
+// @brief Append a string to the end of a line
+void line_add_string_to_text_buffer (EDITOR_LINE *dest_line, char *src,
+                                     size_t append_len)
 {
-  // Allocate more memory for the line to account for the appended string
-  dest_line->chars = realloc (dest_line->chars, dest_line->len + append_len + 1);
+  // Allocate more memory and shift lines to fit in the appended string
+  dest_line->chars = realloc (dest_line->chars,
+                              dest_line->len + append_len + 1);
   memcpy (&dest_line->chars[dest_line->len], src, append_len);
   dest_line->len += append_len;
   dest_line->chars[dest_line->len] = '\0';
-  update_to_render_buffer (dest_line);
   editor.modified++;
+  editor_add_to_render_buffer (dest_line);
 }
 
-// Free the memory of a line
-void free_line (ELINE *line)
+// @brief Free the memory of a line
+void util_free_line (EDITOR_LINE *line)
 {
   free (line->chars);
   free (line->render);
   free (line->hl);
 }
 
-// Delete an entire line
-void delete_line (int idx)
+// @brief Delete an entire line
+void line_delete (int idx)
 {
   int i;
 
-  // Bounds checking
   if (idx < 0 || idx > editor.nlines)
     return;
 
-  // Essentially, we are freeing a line and then shifting the other lines up
-  // by one
-  free_line (&editor.lines[idx]);
+  // Freeing line idx and then shift the other lines
+  util_free_line (&editor.lines[idx]);
   memmove (&editor.lines[idx], &editor.lines[idx + 1],
-           sizeof (ELINE) * (editor.nlines - idx - 1));
-  // Decrement the line idx when a line is deleted
+           sizeof (EDITOR_LINE) * (editor.nlines - idx - 1));
+
   for (i = idx; i < editor.nlines - 1; i++)
     editor.lines[idx].idx--;
+
   editor.nlines--;
   editor.modified++;
 }

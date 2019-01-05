@@ -6,9 +6,7 @@
  *
  * @author E. J. Parkinson
  *
- * @brief
- *
- * @details
+ * @brief Control functions for updating syntax highlighting.
  *
  * ************************************************************************** */
 
@@ -18,188 +16,112 @@
 #include <string.h>
 
 #include "kris.h"
+#include "syntax.h"
 
-
-#define HL_HIGHLIGHT_NUMBERS (1<<0)
-#define HL_HIGHLIGHT_STRINGS (1<<1)
-
-// C syntax highlighting
-char *C_EXTENSIONS[] = {".c", ".h", ".cpp", ".hpp", NULL};
-char *C_KEYWORDS[] = {
-  "switch", "if", "while", "for", "break", "continue", "return", "else",
-   "struct", "union", "typedef", "static", "enum", "class", "case", "int|",
-   "long|", "double|", "float|", "char|", "unsigned|", "signed|", "void|",
-   NULL
-};
-
-// Fortran syntax highlighting
-char *FORTRAN_EXTENTIONS[] = {".f", ".f90", ".f95"};
-char *FORTRAN_KEYWORDS[] = {
-  "assign", "backspace", "block", "data", "call", "close", "common", "continue",
-  "data", "dimension", "do", "else", "else", "if", "end", "endfile", "endif",
-  "entry", "equivalence", "external", "format", "function", "goto", "if",
-  "implicit", "inquire", "intrinsic", "open", "parameter", "pause", "print",
-  "program", "read", "return", "rewind", "rewrite", "save", "stop",
-  "subroutine", "then", "write", "allocatable", "allocate", "case",
-  "contains", "cycle", "deallocate", "elsewhere", "exit", "include",
-  "interface", "intent", "module", "namelist", "nullify", "only", "operator",
-  "optional", "pointer", "private", "procedure", "public", "recursive",
-  "result", "select", "sequence", "target", "use", "while", "where",
-  "elemental", "forall", "pure", "integer|", "real|", "double precision|",
-  "complex|", "logical|", "character|", "ASSIGN", "BACKSPACE", "BLOCK", "DATA",
-  "CALL", "CLOSE", "COMMON", "CONTINUE", "DATA", "DIMENSION", "DO", "ELSE",
-  "ELSE", "IF", "END", "ENDFILE", "ENDIF", "ENTRY", "EQUIVALENCE", "EXTERNAL",
-  "FORMAT", "FUNCTION", "GOTO", "IF", "IMPLICIT", "INQUIRE", "INTRINSIC",
-  "OPEN", "PARAMETER", "PAUSE", "PRINT", "PROGRAM", "READ", "RETURN", "REWIND",
-  "REWRITE", "SAVE", "STOP", "SUBROUTINE", "THEN", "WRITE", "ALLOCATABLE",
-  "ALLOCATE", "CASE", "CONTAINS", "CYCLE", "DEALLOCATE", "ELSEWHERE", "EXIT",
-  "INCLUDE", "INTERFACE", "INTENT", "MODULE", "NAMELIST", "NULLIFY", "ONLY",
-  "OPERATOR", "OPTIONAL", "POINTER", "PRIVATE", "PROCEDURE", "PUBLIC",
-  "RECURSIVE", "RESULT", "SELECT", "SEQUENCE", "TARGET", "USE", "WHILE",
-  "WHERE", "ELEMENTAL", "FORALL", "PURE", "INTEGER|", "REAL|",
-  "DOUBLE PRECISION|", "COMPLEX|", "LOGICAL|", "CHARACTER|", NULL
-};
-
-// Python syntax highlighting
-char *PYTHON_EXTENSIONS[] = { ".py", NULL };
-char *PYTHON_KEYWORDS[] = {
-  "and", "as", "assert", "break", "class", "continue", "def", "del", "elif",
-  "else:", "except", "exec", "finally", "for", "from", "global", "if", "import",
-  "in", "is", "lambda", "not", "or", "pass", "print", "raise", "return", "try",
-  "while", "with", "yield", "async", "await", "nonlocal", "range", "xrange",
-  "reduce", "map", "filter", "all", "any", "sum", "dir", "abs", "breakpoint",
-  "compile", "delattr", "divmod", "format", "eval", "getattr", "hasattr","hash",
-  "help", "id", "input", "isinstance", "issubclass", "len", "locals", "max",
-  "min", "next", "open", "pow", "repr", "reversed", "round", "setattr", "slice",
-  "sorted", "super", "vars", "zip", "__import__", "reload", "raw_input",
-  "execfile", "file", "cmp", "basestring", "buffer|", "bytearray|", "bytes|",
-  "complex|", "float|", "frozenset|", "int|", "list|", "long|", "None|", "set|",
-  "str|", "chr|", "tuple|", "bool|", "False|", "True|", "type|", "unicode|",
-  "dict|", "ascii|", "bin|", "callable|", "classmethod|", "enumerate|", "hex|",
-  "oct|", "ord|", "iter|", "memoryview|", "object|", "property|",
-  "staticmethod|", "unichr|", NULL
-};
-
-// Syntax highlighting database
-SYNTAX HLDB[] = {
-  {
-    "C",
-    C_EXTENSIONS,
-    C_KEYWORDS,
-    "#", "//", "/*", "*/",
-    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
-  },
-  {
-    "FORTRAN",
-    FORTRAN_EXTENTIONS,
-    FORTRAN_KEYWORDS,
-    "!", "!", "", "",
-    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
-  },
-  {
-    "PY",
-    PYTHON_EXTENSIONS,
-    PYTHON_KEYWORDS,
-    "", "#", "\"\"\"", "\"\"\"",
-    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
-  },
-};
-
-#define HLDB_ENTRIES (sizeof (HLDB) / sizeof (HLDB[0]))
-
-// Will return true if the char passed is considered a separator char
+// @brief Return true if the char passed is considered a separator
 int is_separator (int c)
 {
-  // isspace checks if it's a space
-  // strchr checks for an occurrence in a string
   return isspace (c) || c == '\0' || strchr (",.()+-/*=~%<>[];", c) != NULL;
 }
 
-// Match the file type and syntax highlighting
-void select_syntax_highlighting (void)
+// @brief Convert an internal highlight num to one for the terminal
+int syntax_get_colour (int hl)
+{
+  switch (hl)
+  {
+    case HL_PREPROCESS:
+    case HL_NUMBER: return 31;    // red
+    case HL_MATCH: return 34;     // dark blue
+    case HL_STRING: return 35;    // magenta
+    case HL_ML_COMMENT:
+    case HL_COMMENT: return 32;   // green
+    case HL_KEYWORD1: return 33;  // yellow
+    case HL_KEYWORD2: return 36;  // light blue
+    default: return 37;           // default terminal front colour
+  }
+}
+
+// @brief Match the file type and syntax highlighting
+void syntax_select_highlighting (void)
 {
   int is_ext;
+  char *file_ext;
   size_t i, j, k;
-  char *ext;
-  SYNTAX *s;
 
+  // If no filename, return as cannot progress, otherwise find the extension
   editor.syntax = NULL;
   if (editor.filename == NULL)
     return;
+  file_ext = strrchr (editor.filename, '.');
 
-  // Get a pointer to the . part of the filename and loop over the HLDB entries
-  // and try to match the extension to one in the HLDB
-  ext = strrchr (editor.filename, '.');
+  // Attempt to match the file extension with one in the HLDB
   for (i = 0; i < HLDB_ENTRIES; i++)
   {
-    s = &HLDB[i];
     j = 0;
-    while (s->filematch[j])
+    while (HLDB[i].filematch[j])
     {
-      is_ext = (s->filematch[j][0] == '.');
-      if ((is_ext && ext && !strcmp (ext, s->filematch[j])) ||
-                         (!is_ext && strstr (editor.filename, s->filematch[j])))
+      // Ensure the HLDB extension has a period
+      is_ext = (HLDB[i].filematch[j][0] == '.');
+      if ((is_ext && file_ext && !strcmp (file_ext, HLDB[i].filematch[j])) ||
+                    (!is_ext && strstr (editor.filename, HLDB[i].filematch[j])))
       {
-        editor.syntax = s;
-        // Update all of the lines with the appropriate syntax for use them the
-        // file type changes
+        // Set the editor syntax and update all of the lines
+        editor.syntax = &HLDB[i];
         for (k = 0; k < editor.nlines; k++)
-          update_syntax_highlight (&editor.lines[k]);
+          syntax_update_highlighting (&editor.lines[k]);
         return;
       }
-
       j++;
     }
   }
 }
 
-// Update the syntax highlighting array for a line
-void update_syntax_highlight (ELINE *line)
+// @brief Update the syntax highlight array for a single line
+void syntax_update_highlighting (EDITOR_LINE *line)
 {
   char c;
-  unsigned char prev_hl;
-  size_t i, j, scs_len, mcs_len, mce_len, key_len, pp_len;
-  int prev_sep, in_string, in_comment, kw2, changed;
-  char *scs, *mcs, *mce, *pp;
   char **keywords;
-
-  // Allocate space for syntax highlight array and originally set all of the
-  // chars to have the normal colour
-  line->hl = realloc (line->hl, line->r_len);
-  memset (line->hl, HL_NORMAL, line->r_len);
+  unsigned char prev_hl;
+  char *scs, *mcs, *mce, *pp;
+  int prev_sep, in_string, in_comment, kw2, changed;
+  size_t i, j, scs_len, mcs_len, mce_len, key_len, pp_len;
 
   // If syntax highlighting is not set, return
   if (editor.syntax == NULL)
     return;
 
-  // Alias syntax keywords to something shorter
-  keywords = editor.syntax->keywords;
+  // Allocate space for syntax highlight array and initialise to no highlighting
+  line->hl = realloc (line->hl, line->r_len);
+  memset (line->hl, HL_NORMAL, line->r_len);
 
-  // Alias for single_line_comment to make things a bit neater
+  // Create aliases and find length of the strings
+  keywords = editor.syntax->keywords;
   scs = editor.syntax->single_line_comment;
-  scs_len = scs ? strlen (scs) : 0;
   mcs = editor.syntax->ml_comment_start;
-  mcs_len = mcs ? strlen (mcs) : 0;
   mce = editor.syntax->ml_comment_end;
-  mce_len = mce ? strlen (mce) : 0;
   pp = editor.syntax->pre_processor;
+  scs_len = scs ? strlen (scs) : 0;
+  mcs_len = mcs ? strlen (mcs) : 0;
+  mce_len = mce ? strlen (mce) : 0;
   pp_len = pp ? strlen (pp) : 0;
 
-  // Iterate over the entire line. prev_sep is to check that the previous char
-  // is a separator char so we only colour in numbers and not numbers embedded
-  // in strings as well
+  /*
+   * Loop over the entire render line. prev_sep is to check that the previous
+   * char is a separator char so we only colour in numbers and not numbers
+   * embedded in strings as well. in_comment is initialised to true if the
+   * previous line has an unclosed multiline comment
+   */
+
   i = 0;
   prev_sep = TRUE;
   in_string = FALSE;
-  // Initialise in_comment to be true if the previous row has an unclosed ml
-  // comment
   in_comment = (line->idx > 0 && editor.lines[line->idx - 1].hl_open_comment);
   while (i < line->r_len)
   {
     c = line->render[i];
     prev_hl = (i > 0) ? line->hl[i - 1] : HL_NORMAL;
 
-    // Preprocessor
+    // Process for preprocessor directives
     if (pp_len && !in_string && !in_comment)
     {
       if (!strncmp (&line->render[i], pp, pp_len))
@@ -209,7 +131,7 @@ void update_syntax_highlight (ELINE *line)
       }
     }
 
-    // Single line comments
+    // Process for single line comments
     if (scs_len && !in_string && !in_comment)
     {
       if (!strncmp (&line->render[i], scs, scs_len))
@@ -226,7 +148,7 @@ void update_syntax_highlight (ELINE *line)
       }
     }
 
-    // Multi line comments
+    // Process for multi line comments
     if (mcs_len && mce_len && !in_string)
     {
       if (in_comment)
@@ -254,7 +176,7 @@ void update_syntax_highlight (ELINE *line)
       }
     }
 
-    // Strings
+    // Process for strings, can be enclosed by " or '
     if (editor.syntax->flags & HL_HIGHLIGHT_STRINGS)
     {
       if (in_string)
@@ -277,7 +199,7 @@ void update_syntax_highlight (ELINE *line)
       {
         if (c == '"' || c == '\'')
         {
-          // Save the value so we know if to close around enclosing " or '
+          // Save the value so we know if to close around another " or '
           in_string = c;
           line->hl[i] = HL_STRING;
           i++;
@@ -286,10 +208,10 @@ void update_syntax_highlight (ELINE *line)
       }
     }
 
-    // Numbers
+    // Process for numbers not part of strings or variable names
     if (editor.syntax->flags & HL_HIGHLIGHT_NUMBERS)
     {
-      // The 2nd OR is to allow for decimal numbers
+      // The 2nd OR is for decimal numbers and 3rd is for scientific numbers
       if ((isdigit (c) && (prev_sep || prev_hl == HL_NUMBER)) ||
           (c == '.' && prev_hl == HL_NUMBER) || (c == 'e' && prev_hl == HL_NUMBER))
       {
@@ -300,19 +222,22 @@ void update_syntax_highlight (ELINE *line)
       }
     }
 
-    // Keywords -- make sure a separator came before the keyword
+    // Process for keywords, ensure a separator comes before the keyword
     if (prev_sep)
     {
       for (j = 0; keywords[j]; j++)
       {
+        /*
+         * If the keyword is a keyword2, then there will be a | at the end which
+         * indicates it's a kw2, hence decrement key_len by 1 to remove |
+         */
+
         key_len = strlen (keywords[j]);
-        // If the keyword is a keyword2, then there will be a | at the end which
-        // indicates it's a kw2, hence decrement key_len by 1 to remove it
-        kw2 = keywords[j][key_len - 1] == '|';
+        kw2 = (keywords[j][key_len - 1] == '|');
         if (kw2)
           key_len--;
 
-        // Keywords require a separator before and after hence check
+        // Keywords require a separator before and after
         if (!strncmp (&line->render[i], keywords[j], key_len) &&
                                        is_separator (line->render[i + key_len]))
         {
@@ -332,27 +257,13 @@ void update_syntax_highlight (ELINE *line)
     i++;
   }
 
-  // Track to see if the ml comment has been closed.. if not make a recursive
-  // call to update the next line until the ml comment is closed
+  /*
+   * Track to see if the ml comment has been closed.. if not make a recursive
+   * call to update the next line until the ml comment is closed
+   */
+
   changed = (line->hl_open_comment != in_comment);
   line->hl_open_comment = in_comment;
   if (changed && line->idx + 1 < editor.nlines)
-    update_syntax_highlight (&editor.lines[line->idx + 1]);
-}
-
-// Convert an internal highlighting number to the correct one for the terminal
-int get_syntax_colour (int hl)
-{
-  switch (hl)
-  {
-    case HL_PREPROCESS:
-    case HL_NUMBER: return 31;  // red
-    case HL_MATCH: return 34;   // dark blue
-    case HL_STRING: return 35;  // magenta
-    case HL_ML_COMMENT:
-    case HL_COMMENT: return 32;  // green
-    case HL_KEYWORD1: return 33;  // yellow
-    case HL_KEYWORD2: return 36;  // light blue
-    default: return 37;
-  }
+    syntax_update_highlighting (&editor.lines[line->idx + 1]);
 }
