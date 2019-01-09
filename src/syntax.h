@@ -103,5 +103,4 @@ SYNTAX HLDB[] = {
 
 #define HLDB_ENTRIES (sizeof (HLDB) / sizeof (HLDB[0]))
 
-
 #endif

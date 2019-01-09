@@ -105,7 +105,7 @@ void editor_delete_char (void)
     line_delete_char (line, editor.cx - 1);
     editor.cx--;
   }
-    // If at the beginning of the line, append to the previous line
+  // If at the beginning of the line, append to the previous line
   else
   {
     editor.cx = (int) editor.lines[editor.cy - 1].len;
@@ -254,8 +254,8 @@ void editor_update_screen_buffer (SCREEN_BUF *sb)
       // Write welcome message, only show when text buffer is empty
       if (line == editor.screen_rows / 5 && editor.nlines == 0)
       {
-        welcome_len = snprintf (welcome, sizeof (welcome),
-                                "Kris editor -- version %s", VERSION);
+        welcome_len = (size_t ) snprintf (welcome, sizeof (welcome),
+                                          "Kris editor -- version %s", VERSION);
         if (welcome_len > editor.screen_cols)
           welcome_len = (size_t) editor.screen_cols;
 
@@ -349,7 +349,6 @@ void editor_refresh_screen (void)
   SCREEN_BUF sb = SBUF_INIT;
 
   editor_scroll_text_buffer ();
-
   /*
    * Reset the VT100 mode and place the cursor into the home position
    * and write the editor rows and status to the screen buffer
@@ -372,6 +371,6 @@ void editor_refresh_screen (void)
    */
 
   editor_add_to_screen_buf (&sb, "\x1b[?25h", 6);
-  write (STDOUT_FILENO, sb.buf, sb.len);
+   write (STDOUT_FILENO, sb.buf, sb.len);
   free (sb.buf);
 }

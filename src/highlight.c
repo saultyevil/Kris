@@ -87,13 +87,13 @@ void syntax_update_highlighting (EDITOR_LINE *line)
   int prev_sep, in_string, in_comment, kw2, changed;
   size_t i, j, scs_len, mcs_len, mce_len, key_len, pp_len;
 
-  // If syntax highlighting is not set, return
-  if (editor.syntax == NULL)
-    return;
-
   // Allocate space for syntax highlight array and initialise to no highlighting
   line->hl = realloc (line->hl, line->r_len);
   memset (line->hl, HL_NORMAL, line->r_len);
+
+  // If syntax highlighting is not set, return
+  if (editor.syntax == NULL)
+    return;
 
   // Create aliases and find length of the strings
   keywords = editor.syntax->keywords;

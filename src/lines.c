@@ -52,7 +52,7 @@ void line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
   editor.modified++;
 }
 
-//! Insert a char into the text buffer arrays
+//! @brief Insert a char into the text buffer arrays
 void line_insert_char (EDITOR_LINE *line, int insert_idx, int c)
 {
   if (insert_idx < 0 || insert_idx > line->len)
