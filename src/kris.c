@@ -10,14 +10,35 @@
  *
  * ************************************************************************** */
 
-
 #include <errno.h>
+#include <stdlib.h>
 
 #include "kris.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Main control function of Kris
+ *
+ *  @param[in]          argc    The number of command line arguments provided
+ *                              to the program
+ *  @param[in]          argv    The command line provided to the program
+ *
+ *  @return             EXIT_SUCCESS or EXIT_FAILURE as defined in stdlib.h
+ *
+ *  @details
+ *
+ *  This is the main function of Kris. It initialises the terminal and basic
+ *  editor variables and will either create a new text buffer or read one in
+ *  from file.
+ *
+ *  The function then performs a loop where the screen is refreshed after
+ *  some keyboard input has been refreshed. This happens each time a character
+ *  is input, which means Kris updates on a char by char basis.
+ *
+ * ************************************************************************** */
 
-//! @brief Main control function of Kris
-int main (int argc, char *argv[])
+int
+main (int argc, char *argv[])
 {
   int file_found;
 
@@ -39,9 +60,9 @@ int main (int argc, char *argv[])
     if (errno != 0)
     {
       util_exit ("Unknown error :-(");
-      break;
+      return EXIT_FAILURE;
     }
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 }

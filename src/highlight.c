@@ -88,8 +88,8 @@ void syntax_update_highlighting (EDITOR_LINE *line)
   size_t i, j, scs_len, mcs_len, mce_len, key_len, pp_len;
 
   // Allocate space for syntax highlight array and initialise to no highlighting
-  line->hl = realloc (line->hl, line->r_len);
-  memset (line->hl, HL_NORMAL, line->r_len);
+  line->syn_hl = realloc (line->syn_hl, line->r_len);
+  memset (line->syn_hl, HL_NORMAL, line->r_len);
 
   // If syntax highlighting is not set, return
   if (editor.syntax == NULL)
@@ -120,14 +120,14 @@ void syntax_update_highlighting (EDITOR_LINE *line)
   while (i < line->r_len)
   {
     c = line->render[i];
-    prev_hl = (i > 0) ? line->hl[i - 1] : HL_NORMAL;
+    prev_hl = (i > 0) ? line->syn_hl[i - 1] : HL_NORMAL;
 
     // Process for preprocessor directives
     if (pp_len && !in_string && !in_comment)
     {
       if (!strncmp (&line->render[i], pp, pp_len))
       {
-        memset (&line->hl[i], HL_PREPROCESS, line->r_len - i);
+        memset (&line->syn_hl[i], HL_PREPROCESS, line->r_len - i);
         break;
       }
     }
@@ -137,14 +137,14 @@ void syntax_update_highlighting (EDITOR_LINE *line)
     {
       if (!strncmp (&line->render[i], scs, scs_len))
       {
-        memset (&line->hl[i], HL_COMMENT, line->r_len - i);
+        memset (&line->syn_hl[i], HL_COMMENT, line->r_len - i);
         break;
       }
       // Hacky fix to enable f77 style comments
       else if (line->render[i] == 'c' && i == 0 &&
                                    !strcmp (editor.syntax->filetype, "FORTRAN"))
       {
-        memset (&line->hl[i], HL_COMMENT, line->r_len - i);
+        memset (&line->syn_hl[i], HL_COMMENT, line->r_len - i);
         break;
       }
     }
@@ -154,10 +154,10 @@ void syntax_update_highlighting (EDITOR_LINE *line)
     {
       if (in_comment)
       {
-        line->hl[i] = HL_ML_COMMENT;
+        line->syn_hl[i] = HL_ML_COMMENT;
         if (!strncmp (&line->render[i], mce, mce_len))
         {
-          memset (&line->hl[i], HL_ML_COMMENT, mce_len);
+          memset (&line->syn_hl[i], HL_ML_COMMENT, mce_len);
           i += mce_len;
           in_comment = FALSE;
           prev_sep = TRUE;
@@ -170,7 +170,7 @@ void syntax_update_highlighting (EDITOR_LINE *line)
       }
       else if (!strncmp (&line->render[i], mcs, mce_len))
       {
-        memset (&line->hl[i], HL_ML_COMMENT, mcs_len);
+        memset (&line->syn_hl[i], HL_ML_COMMENT, mcs_len);
         i+= mcs_len;
         in_comment = TRUE;
         continue;
@@ -185,11 +185,11 @@ void syntax_update_highlighting (EDITOR_LINE *line)
         // Deal with escape sequences for quotes
         if (c == '\\' && i + 1 < line->r_len)
         {
-          line->hl[i + 1] = HL_STRING;
+          line->syn_hl[i + 1] = HL_STRING;
           i += 2;
           continue;
         }
-        line->hl[i] = HL_STRING;
+        line->syn_hl[i] = HL_STRING;
         if (c == in_string)
           in_string = FALSE;
         i++;
@@ -202,7 +202,7 @@ void syntax_update_highlighting (EDITOR_LINE *line)
         {
           // Save the value so we know if to close around another " or '
           in_string = c;
-          line->hl[i] = HL_STRING;
+          line->syn_hl[i] = HL_STRING;
           i++;
           continue;
         }
@@ -216,7 +216,7 @@ void syntax_update_highlighting (EDITOR_LINE *line)
       if ((isdigit (c) && (prev_sep || prev_hl == HL_NUMBER)) ||
           (c == '.' && prev_hl == HL_NUMBER) || (c == 'e' && prev_hl == HL_NUMBER))
       {
-        line->hl[i] = HL_NUMBER;
+        line->syn_hl[i] = HL_NUMBER;
         i++;
         prev_sep = FALSE;
         continue;
@@ -242,7 +242,7 @@ void syntax_update_highlighting (EDITOR_LINE *line)
         if (!strncmp (&line->render[i], keywords[j], key_len) &&
                                        is_separator (line->render[i + key_len]))
         {
-          memset (&line->hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, key_len);
+          memset (&line->syn_hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, key_len);
           i += key_len;
           break;
         }

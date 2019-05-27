@@ -43,7 +43,7 @@ void line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
   // Update the render buffer
   editor.lines[insert_index].r_len = 0;
   editor.lines[insert_index].render = NULL;
-  editor.lines[insert_index].hl = NULL;
+  editor.lines[insert_index].syn_hl = NULL;
   editor.lines[insert_index].hl_open_comment = 0;
   editor_add_to_render_buffer (&editor.lines[insert_index]);
 
@@ -101,7 +101,7 @@ void util_free_line (EDITOR_LINE *line)
 {
   free (line->chars);
   free (line->render);
-  free (line->hl);
+  free (line->syn_hl);
 }
 
 //! @brief Delete an entire line

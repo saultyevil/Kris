@@ -32,7 +32,7 @@ void find_keyword_search (char *query, int key)
   // If previously highlighted, return the original highlight colour
   if (saved_hl)
   {
-    memcpy (editor.lines[saved_hl_line].hl, saved_hl,
+    memcpy (editor.lines[saved_hl_line].syn_hl, saved_hl,
             editor.lines[saved_hl_line].r_len);
     free (saved_hl);
     saved_hl = NULL;
@@ -90,8 +90,8 @@ void find_keyword_search (char *query, int key)
       // Set the matched substrings to be HL_MATCH colour
       saved_hl_line = current;
       saved_hl = malloc (line->r_len);
-      memcpy (saved_hl, line->hl, line->r_len);
-      memset (&line->hl[match - line->render], HL_MATCH, strlen (query));
+      memcpy (saved_hl, line->syn_hl, line->r_len);
+      memset (&line->syn_hl[match - line->render], HL_MATCH, strlen (query));
       break;
     }
   }

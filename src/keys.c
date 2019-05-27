@@ -171,7 +171,8 @@ void kp_process_keypress (void)
   switch (c = kp_read_keypress ())
   {
     // Append a new line
-    case '\r':editor_insert_new_line ();
+    case '\r':
+      editor_insert_new_line ();
       break;
     // Exit
     case CTRL_KEY ('q'):

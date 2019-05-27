@@ -54,23 +54,23 @@
  *
  * ************************************************************************** */
 
-typedef struct
+typedef struct EDITOR_LINE
 {
   int idx;             // Line number
   size_t len, r_len;   // Length of the char and render arrays
   char *chars;         // The raw chars read in
   char *render;        // The chars which are displayed (spaces instead of tab)
-  unsigned char *hl;   // The syntax highlighting
+  unsigned char *syn_hl;   // The syntax highlighting
   int hl_open_comment; // The line index of where an multi line comment starts
 } EDITOR_LINE;
 
-typedef struct
+typedef struct SCREEN_BUF
 {
   size_t len;  // Length of the screen buffer
   char *buf;   // Char array storing the screen buffer
 } SCREEN_BUF;
 
-typedef struct
+typedef struct SYNTAX
 {
   char *filetype;              // The file type of the text buffer
   char **filematch;            // The possible file types for syntax
@@ -82,7 +82,7 @@ typedef struct
   int flags;                   // Highlighting flags
 } SYNTAX;
 
-typedef struct
+typedef struct EDITOR_CONFIG
 {
   EDITOR_LINE *lines;
   char *filename;                  // Filename of the text buffer
