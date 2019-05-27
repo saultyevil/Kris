@@ -10,16 +10,28 @@
  *
  * ************************************************************************** */
 
-
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include "kris.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Move the cursor around the terminal
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
 
-//! @brief Move the cursor around the terminal
-void kp_move_cursor (int key)
+void
+kp_move_cursor (int key)
 {
   size_t line_len;
   EDITOR_LINE *line;
@@ -66,8 +78,22 @@ void kp_move_cursor (int key)
     editor.cx = (int) line_len;
 }
 
-//! @brief Read a key press from the terminal
-int kp_read_keypress (void)
+/** **************************************************************************
+ *
+ *  @brief              Read a key press from the terminal
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+int
+kp_read_keypress (void)
 {
   char c;
   char seq[3];
@@ -161,8 +187,22 @@ int kp_read_keypress (void)
   return c;
 }
 
-//! @brief Process a key input from the terminal
-void kp_process_keypress (void)
+/** **************************************************************************
+ *
+ *  @brief              Process a key input from the terminal
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+kp_process_keypress (void)
 {
   int c;
   int nreps;

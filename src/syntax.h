@@ -15,7 +15,6 @@
 #ifndef KRIS_SYNTAX_H
 #define KRIS_SYNTAX_H
 
-
 #define HL_HIGHLIGHT_NUMBERS (1<<0)
 #define HL_HIGHLIGHT_STRINGS (1<<1)
 

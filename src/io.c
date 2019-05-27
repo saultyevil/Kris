@@ -10,7 +10,6 @@
  *
  * ************************************************************************** */
 
-
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -21,20 +20,42 @@
 
 #include "kris.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Display a prompt in the status bar, and input text
+ *
+ *  @param[in]          *prompt_msg    The prompt message to display in the
+ *                                     status bar
+ *  @param[in]          *callback (char *, int)   A function pointer for a function
+ *                                                to recursively call until something
+ *                                                causes it to exit
+ *
+ *  @return             char *buf      Returns whatever is usually returned by
+ *                                     the callback function as a string
+ *
+ *  @details
+ *
+ *  This function will continuously iterate adding characters to the status
+ *  message buff and call to the callback function with this buff. This will
+ *  generally update the status bar and this function acts as a sort of prompt
+ *  for when searching for substrings or inputting file names for saving the
+ *  text buffer.
+ *
+ * ************************************************************************** */
 
-//! @brief Display a prompt in the status bar, and input text
-char *io_status_bar_prompt (char *prompt_msg, void (*callback) (char *, int))
+char *
+io_status_bar_prompt (char *prompt_msg, void (*callback) (char *, int))
 {
   int c;
   char *buf;
-  size_t buf_len, buf_size;
+  size_t buf_len;
+  size_t buf_size;
 
   buf_len = 0;
   buf_size = 128;
   buf = malloc (buf_size);
   buf[0] = '\0';
 
-  // Keep looping until buf can be returned
   while (TRUE)
   {
     editor_set_status_message (prompt_msg, buf);
@@ -42,33 +63,46 @@ char *io_status_bar_prompt (char *prompt_msg, void (*callback) (char *, int))
 
     c = kp_read_keypress ();
 
-    // Allow user to delete in the status prompt
+    /*
+     * Allow user to delete in the status prompt
+     */
+
     if (c == DEL_KEY || c == CTRL_KEY ('h') || c == BACK_SPACE)
     {
       if (buf_len != 0)
         buf[--buf_len] = '\0';
     }
-    // Cancel and return if escape is pressed
+
+    /*
+     * Cancel and return if escape is pressed
+     */
+
     else if (c == '\x1b')
     {
       editor_set_status_message ("");
-      if (callback)
-        callback (buf, c);
+      if (callback) callback (buf, c);
       free (buf);
       return NULL;
     }
-    // Return buf if enter is pressed
+
+    /*
+     * Return buf if enter is pressed
+     */
+
     else if (c == '\r')
     {
       if (buf_len != 0)
       {
         editor_set_status_message ("");
-        if (callback)
-          callback (buf, c);
+        if (callback) callback (buf, c);
         return buf;
       }
     }
-    // If not a control sequence add chars to buf
+
+    /*
+     * If not a control sequence add chars to buf
+     */
+
     else if (!iscntrl (c) && c < 128)
     {
       if (buf_len == buf_size - 1)
@@ -81,67 +115,118 @@ char *io_status_bar_prompt (char *prompt_msg, void (*callback) (char *, int))
       buf[buf_len] = '\0';
     }
 
-    if (callback)
-      callback (buf, c);
+    if (callback) callback (buf, c);
   }
 }
 
-//! @brief Open a file and read into the text buffer
-int io_read_file (char *filename)
+/** **************************************************************************
+ *
+ *  @brief              Open a file and read into the text buffer
+ *
+ *  @param[in]          *filename     The name of the file to read in
+ *
+ *  @return             TRUE if the file could be read, FALSE otherwise
+ *
+ *  @details
+ *
+ *  This function attempts to open a file and read its contents into the text
+ *  buffer a line at a time. This function will also update the syntax
+ *  highlighting depending on the file extension of the file.
+ *
+ *  TRUE is returned the file could be opened, otherwise FALSE is returned.
+ *
+ * ************************************************************************** */
+
+int
+io_read_file (char *filename)
 {
   char *line;
+
   size_t line_cap;
+
   ssize_t line_len;
+
   FILE *input_file;
 
   free (editor.filename);
-  editor.filename = strdup (filename);  // Safer than strcpy?
+  editor.filename = strdup (filename);
 
-  // Open the file and update the syntax highlighting
+  /*
+   * Open the file and update the syntax highlighting
+   */
+
   if (!(input_file = fopen (filename, "r")))
   {
-    // Handle if the file can't be found
-    editor_set_status_message ("Couldn't open file %s: %s", editor.filename,
-                               strerror (errno));
+    errno = 0;
     editor.filename = NULL;
-    errno = 0; // Set errno to 0, otherwise the main loop will exit
+    editor_set_status_message ("Couldn't open file %s: %s", editor.filename, strerror (errno));
     return FALSE;
   }
 
   syntax_select_highlighting ();
 
-  // Read in EACH line of the input file and append to the text buffer
+  /*
+   * Read in EACH line of the input file and append to the text buffer
+   */
+
   line = NULL;
   line_cap = 0;
-  while ((line_len = getline (&line, &line_cap, input_file) != -1))
-  {
-    line_len = strlen (line);  // TODO: fix getline return value returning 1
 
-    // Strip off the return or new line chars and add to the text buffer
-    while (line_len > 0 &&
-                     (line[line_len - 1] == '\n' || line[line_len - 1] == '\r'))
+  while (getline (&line, &line_cap, input_file) != -1)
+  {
+    line_len = strlen (line);
+
+    /*
+     * Strip off the return or new line chars and add to the text buffer
+     */
+
+    while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r'))
       line_len--;
+
     line_add_to_text_buffer (editor.nlines, line, (size_t) line_len);
   }
 
   free (line);
+
   if (fclose (input_file))
     util_exit ("Couldn't close input file");
+
   editor.modified = FALSE;
 
   return TRUE;
 }
 
-//! @brief Convert an array of ELINEs into a single string
-char *io_convert_elines_to_string (size_t *buf_len)
-{
-  char *buf, *p;
-  size_t i, tot_len;
+/** **************************************************************************
+ *
+ *  @brief              Convert an array of ELINEs into a single string
+ *
+ *  @param[in]          buf_len     The size of the buffer
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
 
-  // Figure out the total number of chars in the text buffer
+char *
+io_convert_elines_to_string (size_t *buf_len)
+{
+  size_t i;
+  size_t tot_len;
+
+  char *buf;
+  char *p;
+
+  /*
+   * Figure out the total number of chars in the text buffer
+   */
+
   tot_len = 0;
+
   for (i = 0; i < editor.nlines; i++)
     tot_len += editor.lines[i].len + 1;
+
   *buf_len = tot_len;
 
   /*
@@ -161,14 +246,31 @@ char *io_convert_elines_to_string (size_t *buf_len)
   return buf;
 }
 
-//! @brief Save the text buffer to file
-void io_save_file (void)
+/** **************************************************************************
+ *
+ *  @brief              Save the text buffer to file
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+io_save_file (void)
 {
   char *buf;
   int file_desc;
   size_t buf_len;
 
-  // Prompt for filename and set syntax highlighting
+  /*
+   * Prompt for filename and set syntax highlighting
+   */
+
   if (editor.filename == NULL)
   {
     editor.filename = io_status_bar_prompt ("Save as: %s", NULL);
@@ -205,6 +307,5 @@ void io_save_file (void)
   }
 
   free (buf);
-  editor_set_status_message (
-                            "Can't save file. I/O error: %s", strerror (errno));
+  editor_set_status_message ("Can't save file. I/O error: %s", strerror (errno));
 }

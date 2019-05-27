@@ -10,15 +10,27 @@
  *
  * ************************************************************************** */
 
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "kris.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Append a line of text to the text buffer in editor_config
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
 
-//! @brief Append a line of text to the text buffer in editor_config
-void line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
+void
+line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
 {
   int i;
 
@@ -52,8 +64,22 @@ void line_add_to_text_buffer (int insert_index, char *s, size_t line_len)
   editor.modified++;
 }
 
-//! @brief Insert a char into the text buffer arrays
-void line_insert_char (EDITOR_LINE *line, int insert_idx, int c)
+/** **************************************************************************
+ *
+ *  @brief              Insert a char into the text buffer arrays
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+line_insert_char (EDITOR_LINE *line, int insert_idx, int c)
 {
   if (insert_idx < 0 || insert_idx > line->len)
     insert_idx = (int) line->len;
@@ -68,8 +94,22 @@ void line_insert_char (EDITOR_LINE *line, int insert_idx, int c)
   editor_add_to_render_buffer (line);
 }
 
-//! @brief Delete a char in a char buffer array
-void line_delete_char (EDITOR_LINE *line, int insert_idx)
+/** **************************************************************************
+ *
+ *  @brief              Delete a char in a char buffer array
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+line_delete_char (EDITOR_LINE *line, int insert_idx)
 {
   if (insert_idx < 0 || insert_idx > line->len)
     return;
@@ -82,8 +122,22 @@ void line_delete_char (EDITOR_LINE *line, int insert_idx)
   editor_add_to_render_buffer (line);
 }
 
-//! @brief Append a string to the end of a line
-void line_add_string_to_text_buffer (EDITOR_LINE *dest_line, char *src,
+/** **************************************************************************
+ *
+ *  @brief              Append a string to the end of a line
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+line_add_string_to_text_buffer (EDITOR_LINE *dest_line, char *src,
                                      size_t append_len)
 {
   // Allocate more memory and shift lines to fit in the appended string
@@ -96,16 +150,44 @@ void line_add_string_to_text_buffer (EDITOR_LINE *dest_line, char *src,
   editor_add_to_render_buffer (dest_line);
 }
 
-//! @brief Free the memory of a line
-void util_free_line (EDITOR_LINE *line)
+/** **************************************************************************
+ *
+ *  @brief              Free the memory of a line
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+util_free_line (EDITOR_LINE *line)
 {
   free (line->chars);
   free (line->render);
   free (line->syn_hl);
 }
 
-//! @brief Delete an entire line
-void line_delete (int idx)
+/** **************************************************************************
+ *
+ *  @brief              Delete an entire line
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+line_delete (int idx)
 {
   int i;
 

@@ -10,7 +10,6 @@
  *
  * ************************************************************************** */
 
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,9 +17,22 @@
 
 #include "kris.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Refresh the terminal screen
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
 
-//! @brief Refresh the terminal screen
-void util_reset_display (void)
+void
+util_reset_display (void)
 {
   /*
    * \x1b is the escape character
@@ -31,16 +43,44 @@ void util_reset_display (void)
   write (STDOUT_FILENO, "\x1b[H", 3);    // reposition the cursor
 }
 
-//! @brief Kill the program and print an error message and string s
-void util_exit (char *s)
+/** **************************************************************************
+ *
+ *  @brief              Kill the program and print an error message and string s
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+util_exit (char *s)
 {
   util_reset_display ();
   perror (s);
   exit (errno);
 }
 
-//! @brief Convert the cursor pos in chars array to a pos in render array
-int util_convert_cx_to_rx (EDITOR_LINE *line, int cx)
+/** **************************************************************************
+ *
+ *  @brief              Convert the cursor pos in chars array to a pos in render array
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+int
+util_convert_cx_to_rx (EDITOR_LINE *line, int cx)
 {
   int rx;
   size_t i;
@@ -61,8 +101,23 @@ int util_convert_cx_to_rx (EDITOR_LINE *line, int cx)
   return rx;
 }
 
-//! @brief Convert the cursor pos in render array to a pos in the char array
-int util_convert_rx_to_cx (EDITOR_LINE *line, int rx)
+/** **************************************************************************
+ *
+ *  @brief              Convert the cursor pos in render array to a pos in the
+ *                      char array
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+int
+util_convert_rx_to_cx (EDITOR_LINE *line, int rx)
 {
   size_t cx;
   int cur_rx;
@@ -86,8 +141,22 @@ int util_convert_rx_to_cx (EDITOR_LINE *line, int rx)
   return (int) cx;
 }
 
-//! @brief Free memory to avoid any memory leaks at exit
-void util_clean_memory (void)
+/** **************************************************************************
+ *
+ *  @brief              Free memory to avoid any memory leaks at exit
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+util_clean_memory (void)
 {
   size_t i;
 

@@ -10,18 +10,35 @@
  *
  * ************************************************************************** */
 
-
 #include <signal.h>
 
 #include "kris.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Initialise the editor the basic editor variables
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *  Initialises a bunch of variables for the editor global variable. Also uses
+ *  the library function signal to listen out for signals for when the terminal
+ *  size changes, so Kris is able to resize with the terminal.
+ *
+ * ************************************************************************** */
 
-//! @brief Initialise the editor
-void editor_init (void)
+
+//! @brief
+void
+editor_init (void)
 {
   int unused = 0;  // This var is unused but passed for signal
 
-  // Set a initial values for the editor configuration
+  /*
+   * Set a initial values for the editor configuration
+   */
+
   editor.cx = 0;
   editor.cy = 0;
   editor.rx = 0;

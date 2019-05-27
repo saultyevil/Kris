@@ -10,7 +10,6 @@
  *
  * ************************************************************************** */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -19,9 +18,22 @@
 
 #include "kris.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Set the original terminal flags at exit and clean memory
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
 
-//! @brief Set the original terminal flags at exit and clean memory
-void terminal_revert (void)
+void
+terminal_revert (void)
 {
   // Clean up memory to avoid memory leaks
   util_clean_memory ();
@@ -31,8 +43,22 @@ void terminal_revert (void)
     util_exit ("Can't set terminal attributes");
 }
 
-//! @brief Enable raw terminal mode by changing terminal flags
-void terminal_init (void)
+/** **************************************************************************
+ *
+ *  @brief              Enable raw terminal mode by changing terminal flags
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+terminal_init (void)
 {
   struct termios raw_term;
 
@@ -71,8 +97,22 @@ void terminal_init (void)
     util_exit ("Can't set terminal attributes");
 }
 
-//! @brief Get the current position of the cursor
-int terminal_get_cursor_position (int *nrows, int *ncols)
+/** **************************************************************************
+ *
+ *  @brief              Get the current position of the cursor
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+int
+terminal_get_cursor_position (int *nrows, int *ncols)
 {
   int i;
   char buf[32];
@@ -100,8 +140,22 @@ int terminal_get_cursor_position (int *nrows, int *ncols)
   return 0;
 }
 
-//! @brief Determine the size of the terminal window
-int terminal_get_window_size (int *ncols, int *nrows)
+/** **************************************************************************
+ *
+ *  @brief              Determine the size of the terminal window
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+int
+terminal_get_window_size (int *ncols, int *nrows)
 {
   struct winsize ws;
 
@@ -123,8 +177,22 @@ int terminal_get_window_size (int *ncols, int *nrows)
   return SUCCESS;
 }
 
-//! @brief If a SIGWINCH is sent, update the terminal size
-void terminal_update_size (int unused)
+/** **************************************************************************
+ *
+ *  @brief              If a SIGWINCH is sent, update the terminal size
+ *
+ *  @param[in]
+ *  @param[in]
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *
+ * ************************************************************************** */
+
+void
+terminal_update_size (int unused)
 {
   terminal_get_window_size (&editor.screen_cols, &editor.screen_rows);
 

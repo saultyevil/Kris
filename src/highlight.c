@@ -10,7 +10,6 @@
  *
  * ************************************************************************** */
 
-
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,15 +17,43 @@
 #include "kris.h"
 #include "syntax.h"
 
+/** **************************************************************************
+ *
+ *  @brief              Return true if the char passed is considered a separator
+ *
+ *  @param[in]          c     An integer representing an ASCII char
+ *
+ *  @return             TRUE or FALSE
+ *
+ *  @details
+ *
+ *  Simply returns TRUE if the character passed to it is a separator or not. A
+ *  separator includes a space or some type of punctuation.
+ *
+ * ************************************************************************** */
 
-//! @brief Return true if the char passed is considered a separator
-int is_separator (int c)
+int
+is_separator (int c)
 {
   return isspace (c) || c == '\0' || strchr (",.()+-/*=~%<>[];", c) != NULL;
 }
 
-//! @brief Convert an internal highlight num to one for the terminal
-int syntax_get_colour (int hl)
+/** **************************************************************************
+ *
+ *  @brief              Convert an internal highlight num to one for the terminal
+ *
+ *  @param[in]          hl     The internal syntax highlight number
+ *
+ *  @return             A colour code for the terminal
+ *
+ *  @details
+ *
+ *  Returns the colour code for VT100 terminal escape characters.
+ *
+ * ************************************************************************** */
+
+int
+syntax_get_colour (int hl)
 {
   switch (hl)
   {
@@ -42,34 +69,73 @@ int syntax_get_colour (int hl)
   }
 }
 
-//! @brief Match the file type and syntax highlighting
-void syntax_select_highlighting (void)
+/** **************************************************************************
+ *
+ *  @brief              Match the file type and syntax highlighting
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *  Figures out the file type from the filename and either sets the syntax
+ *  highlighting as NULL or sets it appropriately from the syntax highlighting
+ *  database. If the syntax highlighting it set, then the syntax highlighting is
+ *  updated. This means the file type can be changed and the syntax highlighting
+ *  will be updated.
+ *
+ * ************************************************************************** */
+
+void
+syntax_select_highlighting (void)
 {
   int is_ext;
-  char *file_ext;
-  size_t i, j, k;
 
-  // If no filename, return as cannot progress, otherwise find the extension
+  size_t i;
+  size_t j;
+  size_t k;
+
+  char *file_ext;
+
+  /*
+   * If no filename, return as cannot progress, otherwise find the extension
+   * of the file
+   */
+
   editor.syntax = NULL;
   if (editor.filename == NULL)
     return;
+
+  // TODO: this might fail if the filename has multiple periods in it
   file_ext = strrchr (editor.filename, '.');
 
-  // Attempt to match the file extension with one in the HLDB
+  /*
+   * Attempt to match the file extension with one in the synthax highlight
+   * database which is located in syntax.h
+   */
+
   for (i = 0; i < HLDB_ENTRIES; i++)
   {
     j = 0;
     while (HLDB[i].filematch[j])
     {
-      // Ensure the HLDB extension has a period
+      /*
+       * Ensure the HLDB extension has a period
+       */
+
       is_ext = (HLDB[i].filematch[j][0] == '.');
+
+      /*
+       * Set the editor syntax and update all of the lines
+       */
+
       if ((is_ext && file_ext && !strcmp (file_ext, HLDB[i].filematch[j])) ||
-                    (!is_ext && strstr (editor.filename, HLDB[i].filematch[j])))
+                                                            (!is_ext && strstr (editor.filename, HLDB[i].filematch[j])))
       {
-        // Set the editor syntax and update all of the lines
         editor.syntax = &HLDB[i];
+
         for (k = 0; k < editor.nlines; k++)
           syntax_update_highlighting (&editor.lines[k]);
+
         return;
       }
       j++;
@@ -77,25 +143,59 @@ void syntax_select_highlighting (void)
   }
 }
 
-//! @brief Update the syntax highlight array for a single line
-void syntax_update_highlighting (EDITOR_LINE *line)
+/** **************************************************************************
+ *
+ *  @brief              Update the syntax highlight array for a single line
+ *
+ *  @param[in]          *line      The line to update syntax highlighting for
+ *
+ *  @return             void
+ *
+ *  @details
+ *
+ *  TODO fill out the documentation - I have no clue how this works anymore lole
+ *
+ * ************************************************************************** */
+
+void
+syntax_update_highlighting (EDITOR_LINE *line)
 {
+  int prev_sep;
+  int in_string;
+  int in_comment;
+  int kw2;
+  int changed;
+
   char c;
   char **keywords;
+  char *scs;
+  char *mcs;
+  char *mce;
+  char *pp;
   unsigned char prev_hl;
-  char *scs, *mcs, *mce, *pp;
-  int prev_sep, in_string, in_comment, kw2, changed;
-  size_t i, j, scs_len, mcs_len, mce_len, key_len, pp_len;
 
-  // Allocate space for syntax highlight array and initialise to no highlighting
+  size_t i;
+  size_t j;
+  size_t scs_len;
+  size_t mcs_len;
+  size_t mce_len;
+  size_t key_len;
+  size_t pp_len;
+
+  /*
+   * Allocate space for syntax highlight array and initialise to no highlighting
+   */
+
   line->syn_hl = realloc (line->syn_hl, line->r_len);
   memset (line->syn_hl, HL_NORMAL, line->r_len);
 
-  // If syntax highlighting is not set, return
   if (editor.syntax == NULL)
     return;
 
-  // Create aliases and find length of the strings
+  /*
+   * Just aliases for various strings and the length of these strings
+   */
+
   keywords = editor.syntax->keywords;
   scs = editor.syntax->single_line_comment;
   mcs = editor.syntax->ml_comment_start;
@@ -117,12 +217,16 @@ void syntax_update_highlighting (EDITOR_LINE *line)
   prev_sep = TRUE;
   in_string = FALSE;
   in_comment = (line->idx > 0 && editor.lines[line->idx - 1].hl_open_comment);
+
   while (i < line->r_len)
   {
     c = line->render[i];
     prev_hl = (i > 0) ? line->syn_hl[i - 1] : HL_NORMAL;
 
-    // Process for preprocessor directives
+    /*
+     * Process for preprocessor directives
+     */
+
     if (pp_len && !in_string && !in_comment)
     {
       if (!strncmp (&line->render[i], pp, pp_len))
@@ -132,7 +236,10 @@ void syntax_update_highlighting (EDITOR_LINE *line)
       }
     }
 
-    // Process for single line comments
+    /*
+     * Process for single line comments
+     */
+
     if (scs_len && !in_string && !in_comment)
     {
       if (!strncmp (&line->render[i], scs, scs_len))
@@ -140,16 +247,17 @@ void syntax_update_highlighting (EDITOR_LINE *line)
         memset (&line->syn_hl[i], HL_COMMENT, line->r_len - i);
         break;
       }
-      // Hacky fix to enable f77 style comments
-      else if (line->render[i] == 'c' && i == 0 &&
-                                   !strcmp (editor.syntax->filetype, "FORTRAN"))
+      else if (line->render[i] == 'c' && i == 0 && !strcmp (editor.syntax->filetype, "FORTRAN"))  // Awful f77 thing
       {
         memset (&line->syn_hl[i], HL_COMMENT, line->r_len - i);
         break;
       }
     }
 
-    // Process for multi line comments
+    /*
+     * Process for multi line comments
+     */
+
     if (mcs_len && mce_len && !in_string)
     {
       if (in_comment)
@@ -177,7 +285,10 @@ void syntax_update_highlighting (EDITOR_LINE *line)
       }
     }
 
-    // Process for strings, can be enclosed by " or '
+    /*
+     * Process for strings, can be enclosed by " or '
+     */
+
     if (editor.syntax->flags & HL_HIGHLIGHT_STRINGS)
     {
       if (in_string)
@@ -209,12 +320,15 @@ void syntax_update_highlighting (EDITOR_LINE *line)
       }
     }
 
-    // Process for numbers not part of strings or variable names
+    /*
+     * Process for numbers not part of strings or variable names
+     */
+
     if (editor.syntax->flags & HL_HIGHLIGHT_NUMBERS)
     {
       // The 2nd OR is for decimal numbers and 3rd is for scientific numbers
       if ((isdigit (c) && (prev_sep || prev_hl == HL_NUMBER)) ||
-          (c == '.' && prev_hl == HL_NUMBER) || (c == 'e' && prev_hl == HL_NUMBER))
+                                               (c == '.' && prev_hl == HL_NUMBER) || (c == 'e' && prev_hl == HL_NUMBER))
       {
         line->syn_hl[i] = HL_NUMBER;
         i++;
@@ -223,7 +337,10 @@ void syntax_update_highlighting (EDITOR_LINE *line)
       }
     }
 
-    // Process for keywords, ensure a separator comes before the keyword
+    /*
+     * Process for keywords, ensure a separator comes before the keyword
+     */
+
     if (prev_sep)
     {
       for (j = 0; keywords[j]; j++)
@@ -239,8 +356,7 @@ void syntax_update_highlighting (EDITOR_LINE *line)
           key_len--;
 
         // Keywords require a separator before and after
-        if (!strncmp (&line->render[i], keywords[j], key_len) &&
-                                       is_separator (line->render[i + key_len]))
+        if (!strncmp (&line->render[i], keywords[j], key_len) && is_separator (line->render[i + key_len]))
         {
           memset (&line->syn_hl[i], kw2 ? HL_KEYWORD2 : HL_KEYWORD1, key_len);
           i += key_len;
@@ -265,6 +381,7 @@ void syntax_update_highlighting (EDITOR_LINE *line)
 
   changed = (line->hl_open_comment != in_comment);
   line->hl_open_comment = in_comment;
+
   if (changed && line->idx + 1 < editor.nlines)
     syntax_update_highlighting (&editor.lines[line->idx + 1]);
 }
