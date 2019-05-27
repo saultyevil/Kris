@@ -50,8 +50,7 @@ main (int argc, char *argv[])
     file_found = io_read_file (argv[1]);
 
   if (file_found)
-    editor_set_status_message (
-      "HELP: Ctrl-S to save | Ctrl-F to find | Ctrl-Q to quit");
+    editor_set_status_message ("HELP: Ctrl-S to save | Ctrl-F to find | Ctrl-Q to quit");
 
   while (TRUE)
   {
@@ -66,17 +65,3 @@ main (int argc, char *argv[])
 
   return EXIT_SUCCESS;
 }
-
-/** **************************************************************************
- *
- *  @brief
- *
- *  @param[in]
- *  @param[in]
- *
- *  @return             void
- *
- *  @details
- *
- *
- * ************************************************************************** */

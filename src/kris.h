@@ -173,7 +173,7 @@ void line_add_string_to_text_buffer (EDITOR_LINE *dest_line, char *src,
                                      size_t append_len);
 void line_add_to_text_buffer (int insert_index, char *s, size_t line_len);
 void line_delete_char (EDITOR_LINE *line, int insert_idx);
-void line_delete (int idx);
+void line_delete_line (int idx);
 void line_insert_char (EDITOR_LINE *line, int insert_idx, int c);
 
 // S

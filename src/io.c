@@ -198,14 +198,18 @@ io_read_file (char *filename)
 
 /** **************************************************************************
  *
- *  @brief              Convert an array of ELINEs into a single string
+ *  @brief              Convert the array of text buffers into strings
  *
- *  @param[in]          buf_len     The size of the buffer
+ *  @param[out]         buf_len     The size of the text buffer written in bytes
  *
- *  @return             void
+ *  @return             char *      The text buffer as one string
  *
  *  @details
  *
+ *  Converts the text buffer into one string for writing. This is done by
+ *  counting the total number of characters in the entire of the text buffer
+ *  and then copies each line of the text buffer to the buffer buf. Each line
+ *  is separated by a new line character.
  *
  * ************************************************************************** */
 
@@ -248,15 +252,16 @@ io_convert_elines_to_string (size_t *buf_len)
 
 /** **************************************************************************
  *
- *  @brief              Save the text buffer to file
- *
- *  @param[in]
- *  @param[in]
+ *  @brief              Save the current text buffer to file
  *
  *  @return             void
  *
  *  @details
  *
+ *  This function prompts the user for a filename, and sets the syntax highlighting
+ *  appropriately. The text buffer is then converted into one large string and
+ *  is written to file. If for some reason it cannot be written to file, then
+ *  the user is prompted but the editor does not exit.
  *
  * ************************************************************************** */
 
@@ -306,6 +311,6 @@ io_save_file (void)
     close (file_desc);
   }
 
-  free (buf);
   editor_set_status_message ("Can't save file. I/O error: %s", strerror (errno));
+  free (buf);
 }

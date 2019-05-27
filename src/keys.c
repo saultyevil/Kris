@@ -20,13 +20,15 @@
  *
  *  @brief              Move the cursor around the terminal
  *
- *  @param[in]
- *  @param[in]
+ *  @param[in]          key      An integer representation of a terminal keypress
  *
  *  @return             void
  *
  *  @details
  *
+ *  Moves the cursor around the terminal whilst keeping it within the bounds
+ *  of the terminal window. The cursor is also snapped to the beginning and the
+ *  end of lines.
  *
  * ************************************************************************** */
 
@@ -34,9 +36,13 @@ void
 kp_move_cursor (int key)
 {
   size_t line_len;
+
   EDITOR_LINE *line;
 
-  // Create a line for the case where the cursor is on the last line
+  /*
+   * Create a line for the case where the cursor is on the last line
+   */
+
   line = (editor.cy >= editor.nlines) ? NULL : &editor.lines[editor.cy];
 
   switch (key)
@@ -71,9 +77,13 @@ kp_move_cursor (int key)
       break;
   }
 
-  // Snap the cursor to the end of a shorter line
+  /*
+   * Snap the cursor to the end of a shorter line
+   */
+
   line = (editor.cy >= editor.nlines) ? NULL : &editor.lines[editor.cy];
   line_len = line ? line->len : 0;
+
   if (editor.cx > line_len)
     editor.cx = (int) line_len;
 }
@@ -82,24 +92,29 @@ kp_move_cursor (int key)
  *
  *  @brief              Read a key press from the terminal
  *
- *  @param[in]
- *  @param[in]
- *
- *  @return             void
+ *  @return             int   A integer representing an ASCII character
  *
  *  @details
  *
+ *  Simply reads a keypress which is received from the terminal using the read
+ *  function. If the character is an escape sequence, i.e. if HOME is sent,
+ *  then some extra processing has to be done to figure out which key was
+ *  pressed.
  *
  * ************************************************************************** */
 
 int
 kp_read_keypress (void)
 {
-  char c;
-  char seq[3];
   ssize_t nread;
 
-  // Read in a single char from the terminal
+  char c;
+  char seq[3];
+
+  /*
+   * Read in a single char from the terminal
+   */
+
   while ((nread = read (STDIN_FILENO, &c, 1)) != 1)
   {
     if (nread == -1 && errno != EAGAIN)
@@ -118,7 +133,10 @@ kp_read_keypress (void)
     if (read (STDIN_FILENO, &seq[1], 1) != 1)
       return '\x1b';
 
-    // Deal with the various cases of escape sequences
+    /*
+     * Deal with the various cases of escape sequences
+     */
+
     if (seq[0] == '[')
     {
       if (seq[1] >= '0' && seq[1] <= '9')
@@ -191,13 +209,15 @@ kp_read_keypress (void)
  *
  *  @brief              Process a key input from the terminal
  *
- *  @param[in]
- *  @param[in]
- *
  *  @return             void
  *
  *  @details
  *
+ *  A very complicated collection of switch statements which controls the editor
+ *  depending on the user keypress. This is done by first receiving input from
+ *  the terminal and then using a switch statement to do something such as
+ *  saving the file or quitting the file. The default action for this switch
+ *  statement it to append the key press to the text buffer.
  *
  * ************************************************************************** */
 
@@ -210,30 +230,49 @@ kp_process_keypress (void)
 
   switch (c = kp_read_keypress ())
   {
-    // Append a new line
+    /*
+     * Append a new line
+     */
+
     case '\r':
       editor_insert_new_line ();
       break;
-    // Exit
+
+      /*
+     * Exit
+     */
+
     case CTRL_KEY ('q'):
       if (editor.modified && quit_times > 0)
       {
-        editor_set_status_message ("File has unsaved changes, "
-               "press Ctrl-Q %d more times to quit without saving", quit_times);
+        editor_set_status_message ("File has unsaved changes, press Ctrl-Q %d more times to quit without saving",
+                                   quit_times);
         quit_times--;
         return;
       }
       util_reset_display ();
       exit (SUCCESS);
-    // Save the text buffer to file
+
+    /*
+     * Save the text buffer to file
+     */
+
     case CTRL_KEY ('s'):
       io_save_file ();
       break;
-    // Find a keyword in the text buffer
+
+    /*
+     * Find a keyword in the text buffer
+     */
+
     case CTRL_KEY ('f'):
       find ();
       break;
-    // Navigate using HOME and END keys for end and start of column
+
+    /*
+     * Navigate using HOME and END keys for end and start of column
+     */
+
     case HOME_KEY:
       editor.cx = 0;
       break;
@@ -241,7 +280,11 @@ kp_process_keypress (void)
       if (editor.cy < editor.nlines)
         editor.cx = (int) editor.lines[editor.cy].len;
       break;
-    // Navigate up and down the text buffer using PAGE UP and PAGE DOWN
+
+    /*
+     * Navigate up and down the text buffer using PAGE UP and PAGE DOWN
+     */
+
     case PAGE_UP:
     case PAGE_DOWN:
       if (c == PAGE_UP)
@@ -256,27 +299,42 @@ kp_process_keypress (void)
       while (nreps--)
         kp_move_cursor (c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
       break;
-    // Navigate the text buffer using the arrow keys
+
+    /*
+     * Navigate the text buffer using the arrow keys
+     */
+
     case ARROW_UP:
     case ARROW_DOWN:
     case ARROW_RIGHT:
     case ARROW_LEFT:
       kp_move_cursor (c);
       break;
-    // Remove chars from the text buffer
+
+    /*
+     * Remove chars from the text buffer
+     */
+
     case BACK_SPACE:
     case DEL_KEY:
     case CTRL_KEY('h'):
-      // In the case of delete, move the cursor right one step first
-      if (c == DEL_KEY)
+      if (c == DEL_KEY) // In the case of delete, move the cursor right one step first
         kp_move_cursor (ARROW_RIGHT);
       editor_delete_char ();
       break;
-    // Ignore these keys
+
+    /*
+     * Ignore these keys
+     */
+
     case CTRL_KEY ('l'):
     case '\x1b':  // Escape key
       break;
-    // Insert a char into the text buffer
+
+    /*
+     * Insert a char into the text buffer
+     */
+
     default:
       editor_insert_char (c);
       break;

@@ -21,13 +21,12 @@
  *
  *  @brief              Refresh the terminal screen
  *
- *  @param[in]
- *  @param[in]
- *
  *  @return             void
  *
  *  @details
  *
+ *  Resets the terminal display by clearing everything and repositioning the
+ *  cursor or something. Can't quite remember what it's doing exactly.
  *
  * ************************************************************************** */
 
@@ -47,13 +46,14 @@ util_reset_display (void)
  *
  *  @brief              Kill the program and print an error message and string s
  *
- *  @param[in]
- *  @param[in]
+ *  @param[in]          *s    An error message to print
  *
  *  @return             void
  *
  *  @details
  *
+ *  Reset the terminal display, use perror to print the errno error with a
+ *  message and then exit with errno error code.
  *
  * ************************************************************************** */
 
@@ -67,15 +67,22 @@ util_exit (char *s)
 
 /** **************************************************************************
  *
- *  @brief              Convert the cursor pos in chars array to a pos in render array
+ *  @brief              Convert the cursor pos in chars array to a pos in render
+ *                      array
  *
- *  @param[in]
- *  @param[in]
+ *  @param[in]          *line     The line in the text buffer
+ *  @param[in]          cx        The x position of the cursor (col)
  *
- *  @return             void
+ *  @return             rx        The x position of the cursor in the render
+ *                                array
  *
  *  @details
  *
+ *  This function is required as the render array does not have tab characters,
+ *  but has spaces instead. Thus the cursor position in the text buffer
+ *  corresponds to a different position in the render buffer. This function then
+ *  converts tabs into spaces and returns the appropriate index for the cursor
+ *  in the render array.
  *
  * ************************************************************************** */
 
@@ -106,13 +113,16 @@ util_convert_cx_to_rx (EDITOR_LINE *line, int cx)
  *  @brief              Convert the cursor pos in render array to a pos in the
  *                      char array
  *
- *  @param[in]
- *  @param[in]
+ *  @param[in]          *line     The line in the text buffer
+ *  @param[in]          rx        The x position of the cursor in the render array
  *
- *  @return             void
+ *  @return             cx        The x position of the cursor in the char array
  *
  *  @details
  *
+ *  This function operates in the inverse way of util_convert_cx_to_rx. This time
+ *  the cursor position in the render array is converted into a position in the
+ *  char array.
  *
  * ************************************************************************** */
 
@@ -145,13 +155,13 @@ util_convert_rx_to_cx (EDITOR_LINE *line, int rx)
  *
  *  @brief              Free memory to avoid any memory leaks at exit
  *
- *  @param[in]
- *  @param[in]
- *
  *  @return             void
  *
  *  @details
  *
+ *  Loops over each line in the text buffer and frees them from memory. The
+ *  file name of the text buffer is also free'd from memory and then finally
+ *  the entire text buffer.
  *
  * ************************************************************************** */
 

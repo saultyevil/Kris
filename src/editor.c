@@ -218,7 +218,7 @@ editor_delete_char (void)
   {
     editor.cx = (int) editor.lines[editor.cy - 1].len;
     line_add_string_to_text_buffer (&editor.lines[editor.cy - 1], line->chars, line->len);
-    line_delete (editor.cy);
+    line_delete_line (editor.cy);
     editor.cy--;
   }
 }
